@@ -1,0 +1,10 @@
+/*
+
+!/.gitignore
+!/gravity.sln
+!/gravity
+/gravity/*
+!/gravity/gravity.vcxproj
+!/gravity/gravity.vcxproj.filters
+!/gravity/src
+!/gravity/res
