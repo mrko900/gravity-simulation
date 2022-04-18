@@ -30,6 +30,9 @@
     <ClCompile Include="src\GL\Win\WinGLAccess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\App\ProgramLoop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App\Win\WinProgram.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\GL\Win\WinGLAccess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\App\ProgramLoop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,11 +2,12 @@
 
 #include <Windows.h>
 #include "../../GL/GLHelper.h"
+#include "../ProgramLoop.h"
 
-namespace mrko900::gravity::win {
+namespace mrko900::gravity::app::win {
     class WinProgram {
     public:
-        WinProgram(HINSTANCE hInstance, int nCmdShow);
+        WinProgram(HINSTANCE hInstance, int nCmdShow, ProgramLoop& programLoop);
         WinProgram(const WinProgram& other) = delete;
         WinProgram(WinProgram&& other) = delete;
         WinProgram& operator=(const WinProgram& other) = delete;
@@ -24,6 +25,8 @@ namespace mrko900::gravity::win {
         unsigned short m_ViewportNewWidth;
         unsigned short m_ViewportNewHeight;
         mrko900::gravity::gl::GLHelper* m_GLHelper;
+        ProgramLoop& m_ProgramLoop;
+
         void initGL();
         void updateViewport(unsigned short newWidth, unsigned short newHeight);
 

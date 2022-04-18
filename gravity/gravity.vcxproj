@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\App\ProgramLoop.cpp" />
     <ClCompile Include="src\App\Win\WinProgram.cpp" />
     <ClCompile Include="src\App\Win\EntryPoint.cpp" />
     <ClCompile Include="src\GL\GLAccess.cpp" />
@@ -26,6 +27,7 @@
     <ClCompile Include="src\GL\Win\WinGLAccess.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\App\ProgramLoop.h" />
     <ClInclude Include="src\App\Win\WinProgram.h" />
     <ClInclude Include="src\GL\GLAccess.h" />
     <ClInclude Include="src\GL\GLHelper.h" />

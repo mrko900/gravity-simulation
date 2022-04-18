@@ -17,8 +17,9 @@ using mrko900::gravity::gl::GLHelper;
 
 using enum mrko900::gravity::gl::GLHelper::Function;
 
-namespace mrko900::gravity::win {
-    WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow) : m_HInstance(hInstance), m_NCmdShow(nCmdShow) {
+namespace mrko900::gravity::app::win {
+    WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow, ProgramLoop& programLoop) : 
+        m_HInstance(hInstance), m_NCmdShow(nCmdShow), m_ProgramLoop(programLoop) {
     }
 
     void WinProgram::run() {
@@ -71,10 +72,24 @@ namespace mrko900::gravity::win {
         ShowWindow(m_CurrentWindow, m_NCmdShow);
         UpdateWindow(m_CurrentWindow);
         HDC hdc = GetDC(m_CurrentWindow);
-        MSG msg;
         m_RunningGL = true;
 
+        MSG msg;
+        for (;;) {
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+                if (msg.message == WM_QUIT)
+                    break;
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
 
+            if (m_ViewportUpdateRequested) {
+                m_ProgramLoop.updateViewport(m_ViewportNewWidth, m_ViewportNewHeight);
+                m_ViewportUpdateRequested = false;
+            }
+
+            m_ProgramLoop();
+        }
     }
 
     WNDCLASSEXW WinProgram::wndClass(HINSTANCE hInstance) {
@@ -147,6 +162,9 @@ namespace mrko900::gravity::win {
     }
 
     void WinProgram::updateViewport(unsigned short newWidth, unsigned short newHeight) {
+        m_ViewportUpdateRequested = true;
+        m_ViewportNewWidth = newWidth;
+        m_ViewportNewHeight = newHeight;
     }
 
     void WinProgram::onWmCreate(HWND hWnd, LPARAM lParam) {

@@ -1,8 +1,10 @@
 #include <Windows.h>
 #include <iostream>
 #include "WinProgram.h"
+#include "../ProgramLoop.h"
 
-using mrko900::gravity::win::WinProgram;
+using mrko900::gravity::app::win::WinProgram;
+using mrko900::gravity::app::ProgramLoop;
 
 struct Program {
     FILE* fileConsole;
@@ -32,7 +34,8 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance,
     Program program = newProgram();
     enableConsole(program);
 
-    WinProgram winProgram = WinProgram(hInstance, nCmdShow);
+    ProgramLoop programLoop;
+    WinProgram winProgram = WinProgram(hInstance, nCmdShow, programLoop);
     winProgram.run();
 
     disableConsole(program);
