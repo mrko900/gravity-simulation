@@ -34,8 +34,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance,
     Program program = newProgram();
     enableConsole(program);
 
-    ProgramLoop programLoop;
-    WinProgram winProgram = WinProgram(hInstance, nCmdShow, programLoop);
+    WinProgram winProgram = WinProgram(hInstance, nCmdShow);
     winProgram.run();
 
     disableConsole(program);

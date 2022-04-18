@@ -18,8 +18,7 @@ using mrko900::gravity::gl::GLHelper;
 using enum mrko900::gravity::gl::GLHelper::Function;
 
 namespace mrko900::gravity::app::win {
-    WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow, ProgramLoop& programLoop) : 
-        m_HInstance(hInstance), m_NCmdShow(nCmdShow), m_ProgramLoop(programLoop) {
+    WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow) : m_HInstance(hInstance), m_NCmdShow(nCmdShow) {
     }
 
     void WinProgram::run() {
@@ -74,6 +73,8 @@ namespace mrko900::gravity::app::win {
         HDC hdc = GetDC(m_CurrentWindow);
         m_RunningGL = true;
 
+        ProgramLoop programLoop(glHelper);
+
         MSG msg;
         for (;;) {
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -84,11 +85,11 @@ namespace mrko900::gravity::app::win {
             }
 
             if (m_ViewportUpdateRequested) {
-                m_ProgramLoop.updateViewport(m_ViewportNewWidth, m_ViewportNewHeight);
+                programLoop.updateViewport(m_ViewportNewWidth, m_ViewportNewHeight);
                 m_ViewportUpdateRequested = false;
             }
 
-            m_ProgramLoop();
+            programLoop();
         }
     }
 

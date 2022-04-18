@@ -1,9 +1,11 @@
 #pragma once
 
+#include "../GL/GLHelper.h"
+
 namespace mrko900::gravity::app {
     class ProgramLoop {
     public:
-        ProgramLoop();
+        ProgramLoop(mrko900::gravity::gl::GLHelper& glHelper);
         ProgramLoop(const ProgramLoop& other) = delete;
         ProgramLoop(ProgramLoop&& other) = delete;
         ProgramLoop& operator=(const ProgramLoop& other) = delete;
@@ -15,5 +17,6 @@ namespace mrko900::gravity::app {
         bool m_ViewportUpdateRequested;
         unsigned short m_ViewportNewWidth;
         unsigned short m_ViewportNewHeight;
+        mrko900::gravity::gl::GLHelper& m_GLHelper;
     };
 }
