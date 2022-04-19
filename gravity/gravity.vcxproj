@@ -20,6 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\App\ProgramLoop.cpp" />
+    <ClCompile Include="src\Graphics\GL\GLRenderer.cpp" />
+    <ClCompile Include="src\Graphics\Renderer.cpp" />
+    <ClCompile Include="src\Graphics\RendererBase.cpp" />
     <ClCompile Include="src\App\Win\WinProgram.cpp" />
     <ClCompile Include="src\App\Win\EntryPoint.cpp" />
     <ClCompile Include="src\GL\GLAccess.cpp" />
@@ -28,6 +31,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App\ProgramLoop.h" />
+    <ClInclude Include="src\Graphics\GL\GLRenderer.h" />
+    <ClInclude Include="src\Graphics\Renderer.h" />
+    <ClInclude Include="src\Graphics\RendererBase.h" />
     <ClInclude Include="src\App\Win\WinProgram.h" />
     <ClInclude Include="src\GL\GLAccess.h" />
     <ClInclude Include="src\GL\GLHelper.h" />

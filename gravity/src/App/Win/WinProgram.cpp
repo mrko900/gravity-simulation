@@ -1,8 +1,11 @@
 #include "WinProgram.h"
+
 #include <iostream>
 #include "../../GL/Win/WinGLAccess.h"
 #include "../../GL/GLHelper.h"
 #include "../../GL/GLMacros.h"
+#include "../../Graphics/Renderer.h"
+#include "../../Graphics/GL/GLRenderer.h"
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS glHelper
@@ -14,6 +17,8 @@
 
 using mrko900::gravity::gl::win::WinGLAccess;
 using mrko900::gravity::gl::GLHelper;
+using mrko900::gravity::graphics::Renderer;
+using mrko900::gravity::graphics::gl::GLRenderer;
 
 using enum mrko900::gravity::gl::GLHelper::Function;
 
@@ -73,7 +78,15 @@ namespace mrko900::gravity::app::win {
         HDC hdc = GetDC(m_CurrentWindow);
         m_RunningGL = true;
 
-        ProgramLoop programLoop(glHelper);
+        GLRenderer glRenderer = GLRenderer(glHelper);
+        Renderer& renderer = glRenderer;
+
+        ProgramLoop programLoop = ProgramLoop(renderer);
+
+        programLoop.test_addObj(3.0f, -1.1f);
+        programLoop.test_addObj(2.0f, -1.1f);
+        programLoop.test_addObj(1.0f, -1.1f);
+        programLoop.test_addObj(1.0f, -1.1f);
 
         MSG msg;
         for (;;) {
