@@ -41,6 +41,10 @@
     <ClInclude Include="src\GL\GLTypes.h" />
     <ClInclude Include="src\GL\Win\WinGLAccess.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\test_fragment.shader" />
+    <None Include="res\shaders\test_vertex.shader" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

@@ -1,6 +1,7 @@
 #include "WinProgram.h"
 
 #include <iostream>
+#include <fstream>
 #include "../../GL/Win/WinGLAccess.h"
 #include "../../GL/GLHelper.h"
 #include "../../GL/GLMacros.h"
@@ -23,6 +24,20 @@ using mrko900::gravity::graphics::gl::GLRenderer;
 using enum mrko900::gravity::gl::GLHelper::Function;
 
 namespace mrko900::gravity::app::win {
+    static std::string readFile(const std::string& path) {
+        std::ifstream inputStream;
+        inputStream.open(path);
+        std::string s;
+        while (true) {
+            const char i = inputStream.get();
+            if (i == -1)
+                break;
+            s += i;
+        }
+        inputStream.close();
+        return s;
+    }
+
     WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow) : m_HInstance(hInstance), m_NCmdShow(nCmdShow) {
     }
 
@@ -50,12 +65,62 @@ namespace mrko900::gravity::app::win {
         std::vector<const char*> glLoadFuncs {
             "glGetString",
             "wglSwapIntervalEXT",
-            "wglGetSwapIntervalEXT"
+            "wglGetSwapIntervalEXT",
+            "glCreateVertexArrays",
+            "glBindVertexArray",
+            "glCreateProgram",
+            "glCreateShader",
+            "glShaderSource",
+            "glCompileShader",
+            "glAttachShader",
+            "glLinkProgram",
+            "glDeleteShader",
+            "glUseProgram",
+            "glGetError",
+            "glGetShaderInfoLog",
+            "glClearBufferfv",
+            "glDrawArrays",
+            "glViewport",
+            "glUniform1f",
+            "glCreateBuffers",
+            "glBindBuffer",
+            "glBufferStorage",
+            "glVertexAttribBinding",
+            "glEnableVertexAttribArray",
+            "glVertexAttribFormat",
+            "glBindVertexBuffer",
+            "glBlendFunc",
+            "glEnable"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
             IWGL_SWAP_INTERVAL_EXT,
-            IWGL_GET_SWAP_INTERVAL_EXT
+            IWGL_GET_SWAP_INTERVAL_EXT,
+            IGL_CREATE_VERTEX_ARRAYS,
+            IGL_BIND_VERTEX_ARRAY,
+            IGL_CREATE_PROGRAM,
+            IGL_CREATE_SHADER,
+            IGL_SHADER_SOURCE,
+            IGL_COMPILE_SHADER,
+            IGL_ATTACH_SHADER,
+            IGL_LINK_PROGRAM,
+            IGL_DELETE_SHADER,
+            IGL_USE_PROGRAM,
+            IGL_GET_ERROR,
+            IGL_GET_SHADER_INFO_LOG,
+            IGL_CLEAR_BUFFERFV,
+            IGL_DRAW_ARRAYS,
+            IGL_VIEWPORT,
+            IGL_UNIFORM1F,
+            IGL_CREATE_BUFFERS,
+            IGL_BIND_BUFFER,
+            IGL_BUFFER_STORAGE,
+            IGL_VERTEX_ATTRIB_BINDING,
+            IGL_ENABLE_VERTEX_ATTRIB_ARRAY,
+            IGL_VERTEX_ATTRIB_FORMAT,
+            IGL_BIND_VERTEX_BUFFER,
+            IGL_BLEND_FUNC,
+            IGL_ENABLE
         };
 
         int index;
@@ -78,7 +143,10 @@ namespace mrko900::gravity::app::win {
         HDC hdc = GetDC(m_CurrentWindow);
         m_RunningGL = true;
 
-        GLRenderer glRenderer = GLRenderer(glHelper);
+        const std::string vertexShaderStr = readFile("shaders/test_vertex.shader");
+        const std::string fragmentShaderStr = readFile("shaders/test_fragment.shader");
+        GLRenderer glRenderer = GLRenderer(glHelper, { vertexShaderStr, fragmentShaderStr });
+        glRenderer.init();
         Renderer& renderer = glRenderer;
 
         ProgramLoop programLoop = ProgramLoop(renderer);
@@ -103,6 +171,8 @@ namespace mrko900::gravity::app::win {
             }
 
             programLoop();
+
+            SwapBuffers(hdc);
         }
     }
 

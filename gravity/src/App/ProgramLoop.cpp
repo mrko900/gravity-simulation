@@ -16,10 +16,11 @@ namespace mrko900::gravity::app {
 
     void ProgramLoop::operator()() {
         if (m_ViewportUpdateRequested) {
-            m_Renderer.render();
-
+            m_Renderer.viewport(m_ViewportNewWidth, m_ViewportNewHeight);
             m_ViewportUpdateRequested = false;
         }
+
+        m_Renderer.render();
     }
 
     void ProgramLoop::updateViewport(unsigned short newWidth, unsigned short newHeight) {
