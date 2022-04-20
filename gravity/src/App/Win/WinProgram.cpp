@@ -90,7 +90,8 @@ namespace mrko900::gravity::app::win {
             "glVertexAttribFormat",
             "glBindVertexBuffer",
             "glBlendFunc",
-            "glEnable"
+            "glEnable",
+            "glUniform2f"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -120,7 +121,8 @@ namespace mrko900::gravity::app::win {
             IGL_VERTEX_ATTRIB_FORMAT,
             IGL_BIND_VERTEX_BUFFER,
             IGL_BLEND_FUNC,
-            IGL_ENABLE
+            IGL_ENABLE,
+            IGL_UNIFORM2F
         };
 
         int index;
@@ -151,10 +153,7 @@ namespace mrko900::gravity::app::win {
 
         ProgramLoop programLoop = ProgramLoop(renderer);
 
-        programLoop.test_addObj(3.0f, -1.1f);
-        programLoop.test_addObj(2.0f, -1.1f);
-        programLoop.test_addObj(1.0f, -1.1f);
-        programLoop.test_addObj(1.0f, -1.1f);
+        programLoop.test_addObj(0.1f, -0.1f, 0.8f);
 
         MSG msg;
         for (;;) {

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../RendererBase.h"
+#include "../Renderer.h"
 #include "../../GL/GLHelper.h"
 #include <string>
 
 namespace mrko900::gravity::graphics::gl {
-    class GLRenderer : public RendererBase {
+    class GLRenderer : public Renderer {
     public:
         struct Shaders {
             std::string testVertexShader;
@@ -15,6 +15,8 @@ namespace mrko900::gravity::graphics::gl {
         GLRenderer(mrko900::gravity::gl::GLHelper& glHelper, Shaders shaders);
         void init();
         void render() override;
+        void addCircle(Circle& circle) override;
+        void removeCircle(Circle& circle) override;
         void viewport(unsigned short viewportWidth, unsigned short viewportHeight) override;
     private:
         mrko900::gravity::gl::GLHelper& m_GLHelper;

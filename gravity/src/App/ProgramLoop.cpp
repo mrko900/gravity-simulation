@@ -29,8 +29,8 @@ namespace mrko900::gravity::app {
         m_ViewportNewHeight = newHeight;
     }
 
-    void ProgramLoop::test_addObj(float x, float y) {
-        Circle* circle = new Circle { x, y, 5.0f, { 1.0f, 0.0f, 0.5f, 1.0f } }; // todo store and delete
+    void ProgramLoop::test_addObj(float x, float y, float radius) {
+        Circle* circle = new Circle { x, y, radius, { 1.0f, 0.0f, 0.5f, 1.0f } }; // todo store and delete
         m_Renderer.addCircle(*circle);
     }
 }

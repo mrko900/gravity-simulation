@@ -88,6 +88,7 @@
 #define INDEX_FUNC_GL_BEGIN_TRANSFORM_FEEDBACK mrko900::gravity::gl::GLHelper::IGL_BEGIN_TRANSFORM_FEEDBACK
 #define INDEX_FUNC_GL_END_TRANSFORM_FEEDBACK mrko900::gravity::gl::GLHelper::IGL_END_TRANSFORM_FEEDBACK
 #define INDEX_FUNC_GL_BIND_BUFFER_RANGE mrko900::gravity::gl::GLHelper::IGL_BIND_BUFFER_RANGE
+#define INDEX_FUNC_GL_UNIFORM2F mrko900::gravity::gl::GLHelper::IGL_UNIFORM2F
 
 // function macros
 #define glClear GETFUNC(mrko900::gravity::gl::types::FUNC_GL_CLEAR, INDEX_FUNC_GL_CLEAR)
@@ -210,6 +211,7 @@
                                        INDEX_FUNC_GL_END_TRANSFORM_FEEDBACK)
 #define glBindBufferRange GETFUNC(mrko900::gravity::gl::types::FUNC_GL_BIND_BUFFER_RANGE,\
                                   INDEX_FUNC_GL_BIND_BUFFER_RANGE)
+#define glUniform2f GETFUNC(mrko900::gravity::gl::types::FUNC_GL_UNIFORM2F, INDEX_FUNC_GL_UNIFORM2F)
 
 // gl constants
 #define GL_TRIANGLES 0x4
