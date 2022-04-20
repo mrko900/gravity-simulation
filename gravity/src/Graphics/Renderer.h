@@ -25,8 +25,8 @@ namespace mrko900::gravity::graphics {
     class Renderer {
     public:
         virtual ~Renderer() noexcept;
-        virtual void addCircle(Circle& circle) = 0;
-        virtual void removeCircle(Circle& circle) = 0;
+        virtual void addCircle(Circle circle) = 0;
+        virtual void removeCircle(Circle circle) = 0;
         virtual void render() = 0;
         virtual void viewport(unsigned short viewportWidth, unsigned short viewportHeight) = 0;
     };

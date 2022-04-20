@@ -153,7 +153,10 @@ namespace mrko900::gravity::app::win {
 
         ProgramLoop programLoop = ProgramLoop(renderer);
 
-        programLoop.test_addObj(0.1f, -0.1f, 0.8f);
+        programLoop.test_addObj(0.1f, -0.2f, 0.1f);
+        programLoop.test_addObj(-0.35f, 0.5f, 0.3f);
+        programLoop.test_addObj(-0.7f, -0.75f, 0.2f);
+        programLoop.test_addObj(0.6, 0.6f, 0.35f);
 
         MSG msg;
         for (;;) {

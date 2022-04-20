@@ -51,13 +51,15 @@ namespace mrko900::gravity::graphics::gl {
     void GLRenderer::render() {
         float bgColor[] = { 0.5f, 0.3f, 0.7f, 1.0f };
         glClearBufferfv(GL_COLOR, 0, bgColor);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        for (int i = 0; i < m_CircleBuffers.size(); ++i) {
+            glUniform1f(0, m_Circles[i].radius);
+            glUniform2f(1, m_Circles[i].x, m_Circles[i].y);
+            glBindVertexBuffer(0, m_CircleBuffers[i], 0, 2 * sizeof(GLfloat));
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        }
     }
 
-    void GLRenderer::addCircle(Circle& circle) {
-        glUniform1f(0, circle.radius);
-        glUniform2f(1, circle.x, circle.y);
-
+    void GLRenderer::addCircle(Circle circle) {
         GLfloat positions[] {
             circle.x - circle.radius, circle.y - circle.radius,
             circle.x - circle.radius, circle.y + circle.radius,
@@ -65,17 +67,21 @@ namespace mrko900::gravity::graphics::gl {
             circle.x + circle.radius, circle.y + circle.radius
         };
 
-        GLuint posBuffer;
-        glCreateBuffers(1, &posBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, posBuffer);
+        GLuint index = m_CircleBuffers.size();
+        m_CircleBuffers.push_back(0);
+        GLuint* bufptr = &m_CircleBuffers[0] + index;
+        glCreateBuffers(1, bufptr);
+        glBindBuffer(GL_ARRAY_BUFFER, *bufptr);
         glBufferStorage(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), positions, 0);
         glVertexAttribBinding(0, 0);
         glEnableVertexAttribArray(0);
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
-        glBindVertexBuffer(0, posBuffer, 0, 2 * sizeof(GLfloat));
+        glBindVertexBuffer(0, *bufptr, 0, 2 * sizeof(GLfloat));
+
+        m_Circles.push_back(std::move(circle));
     }
 
-    void GLRenderer::removeCircle(Circle& circle) {
+    void GLRenderer::removeCircle(Circle circle) {
 
     }
 

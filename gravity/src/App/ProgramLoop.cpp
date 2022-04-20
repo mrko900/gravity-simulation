@@ -30,7 +30,7 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::test_addObj(float x, float y, float radius) {
-        Circle* circle = new Circle { x, y, radius, { 1.0f, 0.0f, 0.5f, 1.0f } }; // todo store and delete
-        m_Renderer.addCircle(*circle);
+        Circle circle { x, y, radius, { 1.0f, 0.0f, 0.5f, 1.0f } }; // todo store and delete
+        m_Renderer.addCircle(std::move(circle));
     }
 }
