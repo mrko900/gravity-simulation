@@ -5,5 +5,5 @@ layout(location = 1) smooth out vec2 coord;
 
 void main() {
     gl_Position = vec4(position, 0.5f, 1.0f);
-    coord = vec2(position.x, position.y);
+    coord = vec2(gl_Position.x, gl_Position.y);
 }

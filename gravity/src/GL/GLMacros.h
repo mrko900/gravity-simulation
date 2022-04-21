@@ -89,6 +89,9 @@
 #define INDEX_FUNC_GL_END_TRANSFORM_FEEDBACK mrko900::gravity::gl::GLHelper::IGL_END_TRANSFORM_FEEDBACK
 #define INDEX_FUNC_GL_BIND_BUFFER_RANGE mrko900::gravity::gl::GLHelper::IGL_BIND_BUFFER_RANGE
 #define INDEX_FUNC_GL_UNIFORM2F mrko900::gravity::gl::GLHelper::IGL_UNIFORM2F
+#define INDEX_FUNC_GL_ORTHO mrko900::gravity::gl::GLHelper::IGL_ORTHO
+#define INDEX_FUNC_GL_MATRIX_MODE mrko900::gravity::gl::GLHelper::IGL_MATRIX_MODE
+#define INDEX_FUNC_GL_LOAD_IDENTITY mrko900::gravity::gl::GLHelper::IGL_LOAD_IDENTITY
 
 // function macros
 #define glClear GETFUNC(mrko900::gravity::gl::types::FUNC_GL_CLEAR, INDEX_FUNC_GL_CLEAR)
@@ -212,6 +215,9 @@
 #define glBindBufferRange GETFUNC(mrko900::gravity::gl::types::FUNC_GL_BIND_BUFFER_RANGE,\
                                   INDEX_FUNC_GL_BIND_BUFFER_RANGE)
 #define glUniform2f GETFUNC(mrko900::gravity::gl::types::FUNC_GL_UNIFORM2F, INDEX_FUNC_GL_UNIFORM2F)
+#define glOrtho GETFUNC(mrko900::gravity::gl::types::FUNC_GL_ORTHO, INDEX_FUNC_GL_ORTHO)
+#define glMatrixMode GETFUNC(mrko900::gravity::gl::types::FUNC_GL_MATRIX_MODE, INDEX_FUNC_GL_MATRIX_MODE)
+#define glLoadIdentity GETFUNC(mrko900::gravity::gl::types::FUNC_GL_LOAD_IDENTITY, INDEX_FUNC_GL_LOAD_IDENTITY)
 
 // gl constants
 #define GL_TRIANGLES 0x4
@@ -316,3 +322,4 @@
 #define GL_SEPARATE_ATTRIBS 0x8C8D
 #define GL_CLIP_PLANE0 0x3000
 #define GL_CLIP_DISTANCE0 GL_CLIP_PLANE0
+#define GL_PROJECTION 0x1701

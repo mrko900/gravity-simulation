@@ -15,6 +15,7 @@
 #define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
 #define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
 #define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
+#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
 
 using mrko900::gravity::gl::win::WinGLAccess;
 using mrko900::gravity::gl::GLHelper;
@@ -91,7 +92,10 @@ namespace mrko900::gravity::app::win {
             "glBindVertexBuffer",
             "glBlendFunc",
             "glEnable",
-            "glUniform2f"
+            "glUniform2f",
+            "glOrtho",
+            "glMatrixMode",
+            "glLoadIdentity"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -122,7 +126,10 @@ namespace mrko900::gravity::app::win {
             IGL_BIND_VERTEX_BUFFER,
             IGL_BLEND_FUNC,
             IGL_ENABLE,
-            IGL_UNIFORM2F
+            IGL_UNIFORM2F,
+            IGL_ORTHO,
+            IGL_MATRIX_MODE,
+            IGL_LOAD_IDENTITY
         };
 
         int index;
@@ -150,13 +157,14 @@ namespace mrko900::gravity::app::win {
         GLRenderer glRenderer = GLRenderer(glHelper, { vertexShaderStr, fragmentShaderStr });
         glRenderer.init();
         Renderer& renderer = glRenderer;
+        renderer.coordinateSystem(-8.0f, 8.0f, -4.5f, 4.5f);
 
         ProgramLoop programLoop = ProgramLoop(renderer);
 
-        programLoop.test_addObj(0.1f, -0.2f, 0.1f);
-        programLoop.test_addObj(-0.35f, 0.5f, 0.3f);
-        programLoop.test_addObj(-0.7f, -0.75f, 0.2f);
-        programLoop.test_addObj(0.6, 0.6f, 0.35f);
+        programLoop.test_addObj(0.0f, 0.0f, 3.0f);
+        programLoop.test_addObj(5.0f, -1.0f, 1.0f);
+        programLoop.test_addObj(5.0f, 0.0f, 1.0f);
+        programLoop.test_addObj(5.0f, 0.5f, 1.0f);
 
         MSG msg;
         for (;;) {

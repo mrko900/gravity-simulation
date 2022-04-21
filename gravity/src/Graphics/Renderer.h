@@ -29,5 +29,6 @@ namespace mrko900::gravity::graphics {
         virtual void removeCircle(Circle circle) = 0;
         virtual void render() = 0;
         virtual void viewport(unsigned short viewportWidth, unsigned short viewportHeight) = 0;
+        virtual void coordinateSystem(float xBegin, float xEnd, float yBegin, float yEnd) = 0;
     };
 }

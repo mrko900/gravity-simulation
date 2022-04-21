@@ -130,4 +130,8 @@ namespace mrko900::gravity::gl::types {
     typedef void (*FUNC_GL_BIND_BUFFER_RANGE) (GLenum target, GLuint index, GLuint buffer,
                                                GLintptr offset, GLsizeiptr size);
     typedef void (*FUNC_GL_UNIFORM2F) (GLint location, GLfloat v0, GLfloat v1);
+    typedef void (*FUNC_GL_ORTHO) (GLdouble left, GLdouble right, GLdouble bottom, GLdouble top,
+                                GLdouble nearVal, GLdouble farVal);
+    typedef void (*FUNC_GL_MATRIX_MODE) (GLenum mode);
+    typedef void (*FUNC_GL_LOAD_IDENTITY) ();
 }

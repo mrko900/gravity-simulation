@@ -52,19 +52,24 @@ namespace mrko900::gravity::graphics::gl {
         float bgColor[] = { 0.5f, 0.3f, 0.7f, 1.0f };
         glClearBufferfv(GL_COLOR, 0, bgColor);
         for (int i = 0; i < m_CircleBuffers.size(); ++i) {
-            glUniform1f(0, m_Circles[i].radius);
-            glUniform2f(1, m_Circles[i].x, m_Circles[i].y);
+            glUniform1f(0, m_Circles[i].xRadius);
+            glUniform1f(1, m_Circles[i].yRadius);
+            glUniform2f(2, m_Circles[i].x, m_Circles[i].y);
             glBindVertexBuffer(0, m_CircleBuffers[i], 0, 2 * sizeof(GLfloat));
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
     }
 
     void GLRenderer::addCircle(Circle circle) {
+        circle.x = (circle.x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
+        circle.y = (circle.y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
+        float xRadius = circle.radius / (m_CoordXEnd - m_CoordXBegin);
+        float yRadius = circle.radius / (m_CoordYEnd - m_CoordYBegin);
         GLfloat positions[] {
-            circle.x - circle.radius, circle.y - circle.radius,
-            circle.x - circle.radius, circle.y + circle.radius,
-            circle.x + circle.radius, circle.y - circle.radius,
-            circle.x + circle.radius, circle.y + circle.radius
+            circle.x - xRadius, circle.y - yRadius,
+            circle.x - xRadius, circle.y + yRadius,
+            circle.x + xRadius, circle.y - yRadius,
+            circle.x + xRadius, circle.y + yRadius
         };
 
         GLuint index = m_CircleBuffers.size();
@@ -78,7 +83,7 @@ namespace mrko900::gravity::graphics::gl {
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
         glBindVertexBuffer(0, *bufptr, 0, 2 * sizeof(GLfloat));
 
-        m_Circles.push_back(std::move(circle));
+        m_Circles.push_back(CircleDef(circle.x, circle.y, xRadius, yRadius));
     }
 
     void GLRenderer::removeCircle(Circle circle) {
@@ -87,5 +92,12 @@ namespace mrko900::gravity::graphics::gl {
 
     void GLRenderer::viewport(unsigned short viewportWidth, unsigned short viewportHeight) {
         glViewport(0, 0, viewportWidth, viewportHeight);
+    }
+
+    void GLRenderer::coordinateSystem(float xBegin, float xEnd, float yBegin, float yEnd) {
+        m_CoordXBegin = xBegin;
+        m_CoordXEnd = xEnd;
+        m_CoordYBegin = yBegin;
+        m_CoordYEnd = yEnd;
     }
 }
