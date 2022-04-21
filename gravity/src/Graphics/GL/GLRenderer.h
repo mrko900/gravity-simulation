@@ -23,7 +23,7 @@ namespace mrko900::gravity::graphics::gl {
         void coordinateSystem(float xBegin, float xEnd, float yBegin, float yEnd) override;
     private:
         struct CircleDef {
-            float x, y, xRadius, yRadius;
+            float x, y, xRadius, yRadius, initialX, initialY, initialRadius;
         };
 
         mrko900::gravity::gl::GLHelper& m_GLHelper;

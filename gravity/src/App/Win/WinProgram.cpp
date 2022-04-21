@@ -47,13 +47,16 @@ namespace mrko900::gravity::app::win {
         if (!GetClassInfoExW(m_HInstance, WND_CLASS_NAME, &windowClass))
             RegisterClassExW(&windowClass);
 
+        float width = 1600.0f;
+        float height = 900.0f;
+
         CreateWindowExW( // return value ignored - triggers WM_CREATE message which assigns m_CurrentWindow
             0,
             WND_CLASS_NAME,
             L"The Window",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            1600, 900,
+            width, height,
             nullptr,
             nullptr,
             m_HInstance,
@@ -93,9 +96,7 @@ namespace mrko900::gravity::app::win {
             "glBlendFunc",
             "glEnable",
             "glUniform2f",
-            "glOrtho",
-            "glMatrixMode",
-            "glLoadIdentity"
+            "glBufferSubData"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -127,9 +128,7 @@ namespace mrko900::gravity::app::win {
             IGL_BLEND_FUNC,
             IGL_ENABLE,
             IGL_UNIFORM2F,
-            IGL_ORTHO,
-            IGL_MATRIX_MODE,
-            IGL_LOAD_IDENTITY
+            IGL_BUFFER_SUB_DATA
         };
 
         int index;
@@ -157,14 +156,20 @@ namespace mrko900::gravity::app::win {
         GLRenderer glRenderer = GLRenderer(glHelper, { vertexShaderStr, fragmentShaderStr });
         glRenderer.init();
         Renderer& renderer = glRenderer;
-        renderer.coordinateSystem(-8.0f, 8.0f, -4.5f, 4.5f);
+
+        float ratio = height / width;
+
+        renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
 
         ProgramLoop programLoop = ProgramLoop(renderer);
 
-        programLoop.test_addObj(0.0f, 0.0f, 3.0f);
-        programLoop.test_addObj(5.0f, -1.0f, 1.0f);
-        programLoop.test_addObj(5.0f, 0.0f, 1.0f);
-        programLoop.test_addObj(5.0f, 0.5f, 1.0f);
+        programLoop.test_addObj(0.5f, 0.5f, 0.2f);
+        programLoop.test_addObj(0.5f, 0.0f, 0.25f);
+        programLoop.test_addObj(0.5f, -0.5f, 0.2f);
+
+        programLoop.test_addObj(-0.5f, 0.5f, 0.25f);
+        programLoop.test_addObj(-0.5f, 0.0f, 0.2f);
+        programLoop.test_addObj(-0.5f, -0.5f, 0.25f);
 
         MSG msg;
         for (;;) {
@@ -176,6 +181,8 @@ namespace mrko900::gravity::app::win {
             }
 
             if (m_ViewportUpdateRequested) {
+                ratio = (float) m_ViewportNewHeight / (float) m_ViewportNewWidth;
+                renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
                 programLoop.updateViewport(m_ViewportNewWidth, m_ViewportNewHeight);
                 m_ViewportUpdateRequested = false;
             }
