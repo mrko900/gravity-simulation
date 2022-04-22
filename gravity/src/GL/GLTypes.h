@@ -135,4 +135,5 @@ namespace mrko900::gravity::gl::types {
     typedef void (*FUNC_GL_MATRIX_MODE) (GLenum mode);
     typedef void (*FUNC_GL_LOAD_IDENTITY) ();
     typedef void (*FUNC_GL_DISABLE) (GLenum cap);
+    typedef void (*FUNC_GL_DELETE_BUFFERS) (GLsizei n, const GLuint* buffers);
 }

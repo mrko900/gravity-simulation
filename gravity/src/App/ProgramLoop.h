@@ -13,7 +13,8 @@ namespace mrko900::gravity::app {
         ProgramLoop& operator=(ProgramLoop&& other) = delete;
         void operator()();
         void updateViewport(unsigned short newWidth, unsigned short newHeight);
-        void test_addObj(float x, float y, float radius);
+        void test_addObj(float x, float y, float radius, unsigned int id);
+        void test_rmObj(unsigned int id);
 
     private:
         bool m_ViewportUpdateRequested;

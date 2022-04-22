@@ -97,7 +97,8 @@ namespace mrko900::gravity::app::win {
             "glUniform2f",
             "glBufferSubData",
             "glGetIntegerv",
-            "glDisable"
+            "glDisable",
+            "glDeleteBuffers"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -131,7 +132,8 @@ namespace mrko900::gravity::app::win {
             IGL_UNIFORM2F,
             IGL_BUFFER_SUB_DATA,
             IGL_GET_INTEGERV,
-            IGL_DISABLE
+            IGL_DISABLE,
+            IGL_DELETE_BUFFERS
         };
 
         int index;
@@ -162,17 +164,19 @@ namespace mrko900::gravity::app::win {
 
         ProgramLoop programLoop = ProgramLoop(renderer);
 
-        programLoop.test_addObj(0.5f, 0.5f, 0.2f);
-        programLoop.test_addObj(0.5f, 0.0f, 0.25f);
-        programLoop.test_addObj(0.5f, -0.5f, 0.2f);
+        programLoop.test_addObj(0.5f, 0.5f, 0.2f, 0);
+        programLoop.test_addObj(0.5f, 0.0f, 0.25f, 1);
+        programLoop.test_addObj(0.5f, -0.5f, 0.2f, 2);
 
-        programLoop.test_addObj(-0.5f, 0.5f, 0.25f);
-        programLoop.test_addObj(-0.5f, 0.0f, 0.2f);
-        programLoop.test_addObj(-0.5f, -0.5f, 0.25f);
+        programLoop.test_addObj(-0.5f, 0.5f, 0.25f, 3);
+        programLoop.test_addObj(-0.5f, 0.0f, 0.2f, 4);
+        programLoop.test_addObj(-0.5f, -0.5f, 0.25f, 5);
 
         wglSwapIntervalEXT(0);
 
         MSG msg;
+        float loop = 0.0f;
+        int i = 0;
         for (;;) {
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
                 if (msg.message == WM_QUIT)
@@ -189,6 +193,16 @@ namespace mrko900::gravity::app::win {
             }
 
             programLoop();
+
+            if (loop >= 1.0f) {
+                if (i < 6) {
+                    programLoop.test_rmObj(i);
+                    ++i;
+                }
+                loop = 0.0f;
+            }
+
+            loop += 0.0001f;
 
             SwapBuffers(hdc);
         }

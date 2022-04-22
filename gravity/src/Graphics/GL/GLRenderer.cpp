@@ -51,16 +51,17 @@ namespace mrko900::gravity::graphics::gl {
     void GLRenderer::render() {
         float bgColor[] = { 0.5f, 0.3f, 0.7f, 1.0f };
         glClearBufferfv(GL_COLOR, 0, bgColor);
-        for (int i = 0; i < m_CircleBuffers.size(); ++i) {
-            glUniform1f(0, m_Circles[i].xRadius);
-            glUniform1f(1, m_Circles[i].yRadius);
-            glUniform2f(2, m_Circles[i].x, m_Circles[i].y);
-            glBindVertexBuffer(0, m_CircleBuffers[i], 0, 2 * sizeof(GLfloat));
+        for (const auto& entry : m_Circles) {
+            unsigned int id = entry.first;
+            glUniform1f(0, m_Circles[id].xRadius);
+            glUniform1f(1, m_Circles[id].yRadius);
+            glUniform2f(2, m_Circles[id].x, m_Circles[id].y);
+            glBindVertexBuffer(0, m_Circles[id].buffer, 0, 2 * sizeof(GLfloat));
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
     }
 
-    void GLRenderer::addCircle(Circle circle) {
+    void GLRenderer::addCircle(unsigned int id, Circle circle) {
         float initialX = circle.x;
         float initialY = circle.y;
         circle.x = (circle.x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
@@ -74,22 +75,22 @@ namespace mrko900::gravity::graphics::gl {
             circle.x + xRadius, circle.y + yRadius
         };
 
-        GLuint index = m_CircleBuffers.size();
-        m_CircleBuffers.push_back(0);
-        GLuint* bufptr = &m_CircleBuffers[index];
-        glCreateBuffers(1, bufptr);
-        glBindBuffer(GL_ARRAY_BUFFER, *bufptr);
+        GLuint buf;
+        glCreateBuffers(1, &buf);
+        glBindBuffer(GL_ARRAY_BUFFER, buf);
         glBufferStorage(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), positions, GL_DYNAMIC_STORAGE_BIT);
         glVertexAttribBinding(0, 0);
         glEnableVertexAttribArray(0);
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
-        glBindVertexBuffer(0, *bufptr, 0, 2 * sizeof(GLfloat));
+        glBindVertexBuffer(0, buf, 0, 2 * sizeof(GLfloat));
 
-        m_Circles.push_back(CircleDef(circle.x, circle.y, xRadius, yRadius, initialX, initialY, circle.radius));
+        m_Circles.insert(std::make_pair(id, CircleDef(circle.x, circle.y, 
+            xRadius, yRadius, initialX, initialY, circle.radius, buf)));
     }
 
-    void GLRenderer::removeCircle(Circle circle) {
-
+    void GLRenderer::removeCircle(unsigned int id) {
+        glDeleteBuffers(1, &m_Circles[id].buffer);
+        m_Circles.erase(id);
     }
 
     void GLRenderer::viewport(unsigned short viewportWidth, unsigned short viewportHeight) {
@@ -102,9 +103,8 @@ namespace mrko900::gravity::graphics::gl {
         m_CoordYBegin = yBegin;
         m_CoordYEnd = yEnd;
 
-        int i = 0;
-        for (GLuint buffer : m_CircleBuffers) {
-            CircleDef& circle = m_Circles[i++];
+        for (auto& entry : m_Circles) {
+            CircleDef& circle = entry.second;
 
             circle.x = (circle.initialX - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
             circle.y = (circle.initialY - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
@@ -117,7 +117,7 @@ namespace mrko900::gravity::graphics::gl {
                 circle.x + xRadius, circle.y + yRadius
             };
 
-            glBindBuffer(GL_ARRAY_BUFFER, buffer);
+            glBindBuffer(GL_ARRAY_BUFFER, circle.buffer);
             glBufferSubData(GL_ARRAY_BUFFER, 0, 8 * sizeof(GLfloat), positions);
 
             circle.xRadius = xRadius;
