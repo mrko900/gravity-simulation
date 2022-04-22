@@ -209,6 +209,8 @@ namespace mrko900::gravity::app::win {
             if (i < 6) {
                 float d = sin(pi * loop) / 20;
                 circles[i]->radius = (i % 2 == 0 ? r1 : r2) + d;
+                circles[i]->x += d / 5000;
+                circles[i]->y -= d / 3000;
                 programLoop.test_updObj(i);
             }
 
