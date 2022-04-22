@@ -20,6 +20,8 @@ using mrko900::gravity::gl::win::WinGLAccess;
 using mrko900::gravity::gl::GLHelper;
 using mrko900::gravity::graphics::Renderer;
 using mrko900::gravity::graphics::gl::GLRenderer;
+using mrko900::gravity::graphics::Circle;
+using mrko900::gravity::graphics::Appearance;
 
 using enum mrko900::gravity::gl::GLHelper::Function;
 
@@ -164,19 +166,29 @@ namespace mrko900::gravity::app::win {
 
         ProgramLoop programLoop = ProgramLoop(renderer);
 
-        programLoop.test_addObj(0.5f, 0.5f, 0.2f, 0);
-        programLoop.test_addObj(0.5f, 0.0f, 0.25f, 1);
-        programLoop.test_addObj(0.5f, -0.5f, 0.2f, 2);
+        float r1 = 0.2f;
+        float r2 = 0.25f;
+        Circle c1 = Circle(0.5f, 0.5f, r1, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
+        Circle c2 = Circle(0.5f, 0.0f, r2, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
+        Circle c3 = Circle(0.5f, -0.5f, r1, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
+        Circle c4 = Circle(-0.5f, 0.5f, r2, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
+        Circle c5 = Circle(-0.5f, 0.0f, r1, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
+        Circle c6 = Circle(-0.5f, -0.5f, r2, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
+        Circle* circles[] = { &c1, &c2, &c3, &c4, &c5, &c6 };
 
-        programLoop.test_addObj(-0.5f, 0.5f, 0.25f, 3);
-        programLoop.test_addObj(-0.5f, 0.0f, 0.2f, 4);
-        programLoop.test_addObj(-0.5f, -0.5f, 0.25f, 5);
+        programLoop.test_addObj(c1, 0);
+        programLoop.test_addObj(c2, 1);
+        programLoop.test_addObj(c3, 2);
+        programLoop.test_addObj(c4, 3);
+        programLoop.test_addObj(c5, 4);
+        programLoop.test_addObj(c6, 5);
 
         wglSwapIntervalEXT(0);
 
         MSG msg;
         float loop = 0.0f;
         int i = 0;
+        float pi = 2 * asin(1);
         for (;;) {
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
                 if (msg.message == WM_QUIT)
@@ -193,6 +205,12 @@ namespace mrko900::gravity::app::win {
             }
 
             programLoop();
+
+            if (i < 6) {
+                float d = sin(pi * loop) / 20;
+                circles[i]->radius = (i % 2 == 0 ? r1 : r2) + d;
+                programLoop.test_updObj(i);
+            }
 
             if (loop >= 1.0f) {
                 if (i < 6) {

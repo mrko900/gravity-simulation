@@ -29,12 +29,15 @@ namespace mrko900::gravity::app {
         m_ViewportNewHeight = newHeight;
     }
 
-    void ProgramLoop::test_addObj(float x, float y, float radius, unsigned int id) {
-        Circle circle { x, y, radius, { 1.0f, 0.0f, 0.5f, 1.0f } };
-        m_Renderer.addCircle(id, std::move(circle));
+    void ProgramLoop::test_addObj(Circle& circle, unsigned int id) {
+        m_Renderer.addCircle(id, circle);
     }
 
     void ProgramLoop::test_rmObj(unsigned int id) {
         m_Renderer.removeCircle(id);
+    }
+
+    void ProgramLoop::test_updObj(unsigned int id) {
+        m_Renderer.refreshCircle(id);
     }
 }

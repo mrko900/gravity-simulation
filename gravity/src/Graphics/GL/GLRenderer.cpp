@@ -11,7 +11,8 @@ using mrko900::gravity::gl::GLHelper;
 using namespace mrko900::gravity::gl::types;
 
 namespace mrko900::gravity::graphics::gl {
-    GLRenderer::GLRenderer(GLHelper& glHelper, Shaders shaders) : m_GLHelper(glHelper), m_Shaders(std::move(shaders)) {
+    GLRenderer::GLRenderer(GLHelper& glHelper, Shaders shaders) : m_GLHelper(glHelper), m_Shaders(std::move(shaders)),
+        m_CoordXBegin(0.0f), m_CoordXEnd(0.0f), m_CoordYBegin(0.0f), m_CoordYEnd(0.0f) {
     }
 
     void GLRenderer::init() {
@@ -61,18 +62,16 @@ namespace mrko900::gravity::graphics::gl {
         }
     }
 
-    void GLRenderer::addCircle(unsigned int id, Circle circle) {
-        float initialX = circle.x;
-        float initialY = circle.y;
-        circle.x = (circle.x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
-        circle.y = (circle.y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
+    void GLRenderer::addCircle(unsigned int id, Circle& circle) {
+        float x = (circle.x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
+        float y = (circle.y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
         float xRadius = 2 * circle.radius / (m_CoordXEnd - m_CoordXBegin);
         float yRadius = 2 * circle.radius / (m_CoordYEnd - m_CoordYBegin);
         GLfloat positions[] {
-            circle.x - xRadius, circle.y - yRadius,
-            circle.x - xRadius, circle.y + yRadius,
-            circle.x + xRadius, circle.y - yRadius,
-            circle.x + xRadius, circle.y + yRadius
+            x - xRadius, y - yRadius,
+            x - xRadius, y + yRadius,
+            x + xRadius, y - yRadius,
+            x + xRadius, y + yRadius
         };
 
         GLuint buf;
@@ -84,13 +83,28 @@ namespace mrko900::gravity::graphics::gl {
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
         glBindVertexBuffer(0, buf, 0, 2 * sizeof(GLfloat));
 
-        m_Circles.insert(std::make_pair(id, CircleDef(circle.x, circle.y, 
-            xRadius, yRadius, initialX, initialY, circle.radius, buf)));
+        m_Circles.insert(std::make_pair(id, CircleDef(x, y, xRadius, yRadius, &circle, buf)));
     }
 
     void GLRenderer::removeCircle(unsigned int id) {
         glDeleteBuffers(1, &m_Circles[id].buffer);
         m_Circles.erase(id);
+    }
+
+    void GLRenderer::refreshCircle(unsigned int id) {
+        CircleDef& circleDef = m_Circles[id];
+        circleDef.x = (circleDef.origin->x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
+        circleDef.y = (circleDef.origin->y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
+        circleDef.xRadius = 2 * circleDef.origin->radius / (m_CoordXEnd - m_CoordXBegin);
+        circleDef.yRadius = 2 * circleDef.origin->radius / (m_CoordYEnd - m_CoordYBegin);
+        GLfloat positions[] {
+            circleDef.x - circleDef.xRadius, circleDef.y - circleDef.yRadius,
+            circleDef.x - circleDef.xRadius, circleDef.y + circleDef.yRadius,
+            circleDef.x + circleDef.xRadius, circleDef.y - circleDef.yRadius,
+            circleDef.x + circleDef.xRadius, circleDef.y + circleDef.yRadius
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, circleDef.buffer);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, 8 * sizeof(GLfloat), positions);
     }
 
     void GLRenderer::viewport(unsigned short viewportWidth, unsigned short viewportHeight) {
@@ -106,10 +120,10 @@ namespace mrko900::gravity::graphics::gl {
         for (auto& entry : m_Circles) {
             CircleDef& circle = entry.second;
 
-            circle.x = (circle.initialX - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
-            circle.y = (circle.initialY - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
-            float xRadius = 2 * circle.initialRadius / (m_CoordXEnd - m_CoordXBegin);
-            float yRadius = 2 * circle.initialRadius / (m_CoordYEnd - m_CoordYBegin);
+            circle.x = (circle.origin->x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
+            circle.y = (circle.origin->y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
+            float xRadius = 2 * circle.origin->radius / (m_CoordXEnd - m_CoordXBegin);
+            float yRadius = 2 * circle.origin->radius / (m_CoordYEnd - m_CoordYBegin);
             GLfloat positions[] {
                 circle.x - xRadius, circle.y - yRadius,
                 circle.x - xRadius, circle.y + yRadius,

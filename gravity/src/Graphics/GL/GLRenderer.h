@@ -17,13 +17,15 @@ namespace mrko900::gravity::graphics::gl {
         GLRenderer(mrko900::gravity::gl::GLHelper& glHelper, Shaders shaders);
         void init();
         void render() override;
-        void addCircle(unsigned int id, Circle circle) override;
+        void addCircle(unsigned int id, Circle& circle) override;
         void removeCircle(unsigned int id) override;
+        void refreshCircle(unsigned int id) override;
         void viewport(unsigned short viewportWidth, unsigned short viewportHeight) override;
         void coordinateSystem(float xBegin, float xEnd, float yBegin, float yEnd) override;
     private:
         struct CircleDef {
-            float x, y, xRadius, yRadius, initialX, initialY, initialRadius;
+            float x, y, xRadius, yRadius;
+            Circle* origin;
             mrko900::gravity::gl::types::GLuint buffer;
         };
 
