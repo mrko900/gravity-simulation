@@ -3,10 +3,9 @@
 #include <iostream>
 #include <fstream>
 #include "../../GL/Win/WinGLAccess.h"
-#include "../../GL/GLHelper.h"
-#include "../../GL/GLMacros.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/GL/GLRenderer.h"
+#include "../../GL/GLMacros.h"
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS glHelper
@@ -96,7 +95,9 @@ namespace mrko900::gravity::app::win {
             "glBlendFunc",
             "glEnable",
             "glUniform2f",
-            "glBufferSubData"
+            "glBufferSubData",
+            "glGetIntegerv",
+            "glDisable"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -128,7 +129,9 @@ namespace mrko900::gravity::app::win {
             IGL_BLEND_FUNC,
             IGL_ENABLE,
             IGL_UNIFORM2F,
-            IGL_BUFFER_SUB_DATA
+            IGL_BUFFER_SUB_DATA,
+            IGL_GET_INTEGERV,
+            IGL_DISABLE
         };
 
         int index;
@@ -142,10 +145,6 @@ namespace mrko900::gravity::app::win {
             m_GLHelper->initFunction(glLoadFuncIds[i]);
         }
 
-        std::cout << glGetString(GL_VERSION) << '\n';
-
-        wglSwapIntervalEXT(0);
-        std::cout << "Swap interval: " << wglGetSwapIntervalEXT() << '\n';
         ShowWindow(m_CurrentWindow, m_NCmdShow);
         UpdateWindow(m_CurrentWindow);
         HDC hdc = GetDC(m_CurrentWindow);
@@ -156,9 +155,9 @@ namespace mrko900::gravity::app::win {
         GLRenderer glRenderer = GLRenderer(glHelper, { vertexShaderStr, fragmentShaderStr });
         glRenderer.init();
         Renderer& renderer = glRenderer;
-
-        float ratio = height / width;
-
+        RECT dimensions;
+        GetClientRect(m_CurrentWindow, &dimensions);
+        float ratio = (float) dimensions.bottom / (float) dimensions.right;
         renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
 
         ProgramLoop programLoop = ProgramLoop(renderer);
@@ -171,6 +170,8 @@ namespace mrko900::gravity::app::win {
         programLoop.test_addObj(-0.5f, 0.0f, 0.2f);
         programLoop.test_addObj(-0.5f, -0.5f, 0.25f);
 
+        wglSwapIntervalEXT(0);
+
         MSG msg;
         for (;;) {
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -182,8 +183,8 @@ namespace mrko900::gravity::app::win {
 
             if (m_ViewportUpdateRequested) {
                 ratio = (float) m_ViewportNewHeight / (float) m_ViewportNewWidth;
-                renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
                 programLoop.updateViewport(m_ViewportNewWidth, m_ViewportNewHeight);
+                renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
                 m_ViewportUpdateRequested = false;
             }
 

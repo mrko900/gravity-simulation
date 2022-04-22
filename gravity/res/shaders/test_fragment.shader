@@ -9,7 +9,7 @@ layout(location = 2) uniform vec2 center;
 void main() {
     float x = coord.x - center.x;
     float y = coord.y - center.y;
-    if (x * x / xRadius / xRadius + y * y / yRadius / yRadius <= 1)
+    if ((x * x) / (xRadius * xRadius) + (y * y) / (yRadius * yRadius) <= 1)
         out_Color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
     else
         out_Color = vec4(0.0f, 0.0f, 0.0f, 0.0f);

@@ -65,8 +65,8 @@ namespace mrko900::gravity::graphics::gl {
         float initialY = circle.y;
         circle.x = (circle.x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
         circle.y = (circle.y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
-        float xRadius = circle.radius / (m_CoordXEnd - m_CoordXBegin) * 2;
-        float yRadius = circle.radius / (m_CoordYEnd - m_CoordYBegin) * 2;
+        float xRadius = 2 * circle.radius / (m_CoordXEnd - m_CoordXBegin);
+        float yRadius = 2 * circle.radius / (m_CoordYEnd - m_CoordYBegin);
         GLfloat positions[] {
             circle.x - xRadius, circle.y - yRadius,
             circle.x - xRadius, circle.y + yRadius,
@@ -76,10 +76,10 @@ namespace mrko900::gravity::graphics::gl {
 
         GLuint index = m_CircleBuffers.size();
         m_CircleBuffers.push_back(0);
-        GLuint* bufptr = &m_CircleBuffers[0] + index;
+        GLuint* bufptr = &m_CircleBuffers[index];
         glCreateBuffers(1, bufptr);
         glBindBuffer(GL_ARRAY_BUFFER, *bufptr);
-        glBufferStorage(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), positions, 0);
+        glBufferStorage(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), positions, GL_DYNAMIC_STORAGE_BIT);
         glVertexAttribBinding(0, 0);
         glEnableVertexAttribArray(0);
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
@@ -108,8 +108,8 @@ namespace mrko900::gravity::graphics::gl {
 
             circle.x = (circle.initialX - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
             circle.y = (circle.initialY - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
-            float xRadius = circle.initialRadius / (m_CoordXEnd - m_CoordXBegin) * 2;
-            float yRadius = circle.initialRadius / (m_CoordYEnd - m_CoordYBegin) * 2;
+            float xRadius = 2 * circle.initialRadius / (m_CoordXEnd - m_CoordXBegin);
+            float yRadius = 2 * circle.initialRadius / (m_CoordYEnd - m_CoordYBegin);
             GLfloat positions[] {
                 circle.x - xRadius, circle.y - yRadius,
                 circle.x - xRadius, circle.y + yRadius,
