@@ -20,6 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\App\ProgramLoop.cpp" />
+    <ClCompile Include="src\Physics\DynamicCoordinatesImpl.cpp" />
+    <ClCompile Include="src\Physics\UniformForceSimulation.cpp" />
+    <ClCompile Include="src\Physics\DynamicCoordinates.cpp" />
     <ClCompile Include="src\Graphics\GL\GLRenderer.cpp" />
     <ClCompile Include="src\Graphics\Renderer.cpp" />
     <ClCompile Include="src\App\Win\WinProgram.cpp" />
@@ -27,10 +30,20 @@
     <ClCompile Include="src\GL\GLAccess.cpp" />
     <ClCompile Include="src\GL\GLHelper.cpp" />
     <ClCompile Include="src\GL\Win\WinGLAccess.cpp" />
+    <ClCompile Include="src\Physics\ForceSimulation.cpp" />
+    <ClCompile Include="src\Physics\MassPoint.cpp" />
+    <ClCompile Include="src\Physics\VectorModel.cpp" />
+    <ClCompile Include="src\Physics\VectorModelImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App\ProgramLoop.h" />
+    <ClInclude Include="src\Physics\DynamicCoordinatesImpl.h" />
+    <ClInclude Include="src\Physics\UniformForceSimulation.h" />
+    <ClInclude Include="src\Physics\DynamicCoordinates.h" />
+    <ClInclude Include="src\Physics\VectorModel.h" />
+    <ClInclude Include="src\Physics\ForceSimulation.h" />
     <ClInclude Include="src\Graphics\GL\GLRenderer.h" />
+    <ClInclude Include="src\Physics\MassPoint.h" />
     <ClInclude Include="src\Graphics\Renderer.h" />
     <ClInclude Include="src\App\Win\WinProgram.h" />
     <ClInclude Include="src\GL\GLAccess.h" />
@@ -38,6 +51,7 @@
     <ClInclude Include="src\GL\GLMacros.h" />
     <ClInclude Include="src\GL\GLTypes.h" />
     <ClInclude Include="src\GL\Win\WinGLAccess.h" />
+    <ClInclude Include="src\Physics\VectorModelImpl.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\test_fragment.shader" />
@@ -54,26 +68,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>

@@ -6,6 +6,7 @@
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/GL/GLRenderer.h"
 #include "../../GL/GLMacros.h"
+#include <chrono>
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS glHelper
@@ -166,24 +167,11 @@ namespace mrko900::gravity::app::win {
 
         ProgramLoop programLoop = ProgramLoop(renderer);
 
-        float r1 = 0.2f;
-        float r2 = 0.25f;
-        Circle c1 = Circle(0.5f, 0.5f, r1, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
-        Circle c2 = Circle(0.5f, 0.0f, r2, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
-        Circle c3 = Circle(0.5f, -0.5f, r1, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
-        Circle c4 = Circle(-0.5f, 0.5f, r2, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
-        Circle c5 = Circle(-0.5f, 0.0f, r1, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
-        Circle c6 = Circle(-0.5f, -0.5f, r2, Appearance(0.0f, 1.0f, 0.0f, 1.0f));
-        Circle* circles[] = { &c1, &c2, &c3, &c4, &c5, &c6 };
-
-        programLoop.test_addObj(c1, 0);
-        programLoop.test_addObj(c2, 1);
-        programLoop.test_addObj(c3, 2);
-        programLoop.test_addObj(c4, 3);
-        programLoop.test_addObj(c5, 4);
-        programLoop.test_addObj(c6, 5);
-
         wglSwapIntervalEXT(0);
+
+        std::chrono::steady_clock::time_point secondStart = std::chrono::high_resolution_clock::now();
+
+        unsigned int frames = 0;
 
         MSG msg;
         float loop = 0.0f;
@@ -205,24 +193,15 @@ namespace mrko900::gravity::app::win {
             }
 
             programLoop();
+            
+            ++frames;
 
-            if (i < 6) {
-                float d = sin(pi * loop) / 20;
-                circles[i]->radius = (i % 2 == 0 ? r1 : r2) + d;
-                circles[i]->x += d / 5000;
-                circles[i]->y -= d / 3000;
-                programLoop.test_updObj(i);
+            std::chrono::steady_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
+            if (currentTime - secondStart > std::chrono::seconds(1)) {
+                secondStart = currentTime;
+                std::cout << "fps: " << frames << '\n';
+                frames = 0;
             }
-
-            if (loop >= 1.0f) {
-                if (i < 6) {
-                    programLoop.test_rmObj(i);
-                    ++i;
-                }
-                loop = 0.0f;
-            }
-
-            loop += 0.0001f;
 
             SwapBuffers(hdc);
         }
