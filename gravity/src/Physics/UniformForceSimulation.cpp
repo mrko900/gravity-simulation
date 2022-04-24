@@ -2,6 +2,17 @@
 
 #include <vector>
 
+
+
+
+
+
+
+
+
+
+#include <iostream>
+
 namespace mrko900::gravity::physics {
     void UniformForceSimulation::addEntity(unsigned int id, DynamicPoint& entity) {
         m_Entities.insert(std::make_pair(id, &entity));
@@ -20,7 +31,8 @@ namespace mrko900::gravity::physics {
             float k = (timeElapsed * timeElapsed) / (2 * entity.massPoint.getMass());
             DynamicCoordinates& coordinates = entity.massPoint.coordinates();
             for (int i = 0; i < dimensions; ++i)
-                coordinates.setCoordinate(i, k * netForce[i] + entity.velocity.getCoordinate(i));
+                coordinates.setCoordinate(i, coordinates.getCoordinate(i) 
+                    + k * netForce[i] + entity.velocity.getCoordinate(i) * timeElapsed);
             for (int i = 0; i < dimensions; ++i)
                 entity.velocity.setCoordinate(i, entity.velocity.getCoordinate(i) 
                     + netForce[i] * timeElapsed / entity.massPoint.getMass());

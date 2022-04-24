@@ -41,7 +41,9 @@ namespace mrko900::gravity::app::win {
         return s;
     }
 
-    WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow) : m_HInstance(hInstance), m_NCmdShow(nCmdShow) {
+    WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow) : m_HInstance(hInstance), m_NCmdShow(nCmdShow),
+        m_CurrentWindow(NULL), m_RunningGL(false), m_ViewportUpdateRequested(false), m_ViewportNewWidth(0),
+        m_ViewportNewHeight(0), m_GLHelper(nullptr) {
     }
 
     void WinProgram::run() {
@@ -176,7 +178,7 @@ namespace mrko900::gravity::app::win {
         MSG msg;
         float loop = 0.0f;
         int i = 0;
-        float pi = 2 * asin(1);
+        float pi = 2 * asinf(1);
         for (;;) {
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
                 if (msg.message == WM_QUIT)
