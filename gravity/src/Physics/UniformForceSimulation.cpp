@@ -2,17 +2,6 @@
 
 #include <vector>
 
-
-
-
-
-
-
-
-
-
-#include <iostream>
-
 namespace mrko900::gravity::physics {
     void UniformForceSimulation::addEntity(unsigned int id, DynamicPoint& entity) {
         m_Entities.insert(std::make_pair(id, &entity));
