@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MassPoint.h"
-#include <unordered_map>
+#include <map>
 
 namespace mrko900::gravity::physics {
     class GravityField {
@@ -13,11 +13,13 @@ namespace mrko900::gravity::physics {
 
     class GravitationalEnvironment {
     public:
+        GravitationalEnvironment(float k);
         void addEntity(unsigned int id, GravityField& entity);
         void removeEntity(unsigned int id);
         void calculate();
 
     private:
-        std::unordered_map<unsigned int, GravityField*> m_Entities;
+        std::map<unsigned int, GravityField*> m_Entities;
+        float m_Coef;
     };
 }
