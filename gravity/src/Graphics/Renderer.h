@@ -14,6 +14,9 @@ namespace mrko900::gravity::graphics {
     struct Circle {
         float x, y, radius;
         Appearance appearance;
+        int layer;
+
+        // todo remove ?
         bool operator==(const Circle& other) {
             return appearance == other.appearance
                 && x == other.x
@@ -22,12 +25,23 @@ namespace mrko900::gravity::graphics {
         }
     };
 
+    struct Rectangle {
+        float x, y, width, height;
+        Appearance appearance;
+        int layer;
+    };
+
+    enum class FigureType {
+        CIRCLE, RECTANGLE
+    };
+
     class Renderer {
     public:
         virtual ~Renderer() noexcept;
         virtual void addCircle(unsigned int id, Circle& circle) = 0;
-        virtual void removeCircle(unsigned int id) = 0;
-        virtual void refreshCircle(unsigned int id) = 0;
+        virtual void addRectangle(unsigned int id, Rectangle& rectangle) = 0;
+        virtual void removeFigure(unsigned int id) = 0;
+        virtual void refreshFigure(unsigned int id) = 0;
         virtual void render() = 0;
         virtual void viewport(unsigned short viewportWidth, unsigned short viewportHeight) = 0;
         virtual void coordinateSystem(float xBegin, float xEnd, float yBegin, float yEnd) = 0;

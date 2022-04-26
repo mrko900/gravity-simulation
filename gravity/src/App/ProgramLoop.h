@@ -12,7 +12,8 @@ namespace mrko900::gravity::app {
         ProgramLoop(ProgramLoop&& other) = delete;
         ProgramLoop& operator=(const ProgramLoop& other) = delete;
         ProgramLoop& operator=(ProgramLoop&& other) = delete;
-        void operator()();
+        void init();
+        void run();
         void updateViewport(unsigned short newWidth, unsigned short newHeight);
         void userInput(UserInput input, void* data);
 

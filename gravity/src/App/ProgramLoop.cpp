@@ -18,7 +18,14 @@ namespace mrko900::gravity::app {
         m_ViewportUpdateRequested(false), m_ViewportNewWidth(0), m_ViewportNewHeight(0) {
     }
 
-    void ProgramLoop::operator()() {
+    void ProgramLoop::init() {
+        Circle* circle = new Circle(0.0f, 0.0f, 0.7f, Appearance(0.0f, 0.0f, 0.0f, 0.0f));
+        Circle* circle2 = new Circle(0.8f, -0.4f, 0.15f, Appearance(0.0f, 0.0f, 0.0f, 0.0f));
+        m_Renderer.addCircle(3, *circle);
+        m_Renderer.addCircle(0, *circle2);
+    }
+
+    void ProgramLoop::run() {
         if (m_ViewportUpdateRequested) {
             m_Renderer.viewport(m_ViewportNewWidth, m_ViewportNewHeight);
             m_ViewportUpdateRequested = false;
@@ -34,18 +41,6 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::userInput(UserInput input, void* data) {
-        if (input == KEY_PRESSED || input == KEY_RELEASED) {
-            KeyboardInputData dat = *((KeyboardInputData*) data);
-            if (dat == SPACE) {
-                std::cout << "Space pressed or released\n";
-                if (input == KEY_RELEASED)
-                    std::cout << " Actually released\n";
-            }
-        } else if (input == MOUSE_PRESSED) {
-            MouseClickInputData dat = *((MouseClickInputData*) data);
-            if (dat.button == MouseButton::LEFT) {
-                std::cout << "\" lbutton pressed at " << dat.x << " " << dat.y << '\n';
-            }
-        }
+
     }
 }

@@ -170,6 +170,7 @@ namespace mrko900::gravity::app::win {
         renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
 
         ProgramLoop programLoop = ProgramLoop(renderer);
+        programLoop.init();
         m_ProgramLoop = &programLoop;
         m_ProgramLoopRunning = true;
 
@@ -198,7 +199,7 @@ namespace mrko900::gravity::app::win {
                 m_ViewportUpdateRequested = false;
             }
 
-            programLoop();
+            programLoop.run();
             
             ++frames;
 
