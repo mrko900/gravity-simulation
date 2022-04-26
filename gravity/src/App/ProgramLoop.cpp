@@ -19,10 +19,7 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::init() {
-        Circle* circle = new Circle(0.0f, 0.0f, 0.7f, Appearance(0.0f, 0.0f, 0.0f, 0.0f));
-        Circle* circle2 = new Circle(0.8f, -0.4f, 0.15f, Appearance(0.0f, 0.0f, 0.0f, 0.0f));
-        m_Renderer.addCircle(3, *circle);
-        m_Renderer.addCircle(0, *circle2);
+
     }
 
     void ProgramLoop::run() {
