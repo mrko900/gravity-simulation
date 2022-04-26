@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App\ProgramLoop.h" />
+    <ClInclude Include="src\App\UserInput.h" />
     <ClInclude Include="src\Physics\DynamicCoordinatesImpl.h" />
     <ClInclude Include="src\Physics\GravitationalEnvironment.h" />
     <ClInclude Include="src\Physics\UniformForceSimulation.h" />

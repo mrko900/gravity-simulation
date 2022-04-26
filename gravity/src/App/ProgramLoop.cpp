@@ -9,7 +9,11 @@ using mrko900::gravity::gl::GLHelper;
 using mrko900::gravity::graphics::Circle;
 using mrko900::gravity::graphics::Appearance;
 
+using enum mrko900::gravity::app::UserInput;
+using enum mrko900::gravity::app::KeyboardInputData;
+
 namespace mrko900::gravity::app {
+
     ProgramLoop::ProgramLoop(mrko900::gravity::graphics::Renderer& renderer) : m_Renderer(renderer),
         m_ViewportUpdateRequested(false), m_ViewportNewWidth(0), m_ViewportNewHeight(0) {
     }
@@ -29,15 +33,14 @@ namespace mrko900::gravity::app {
         m_ViewportNewHeight = newHeight;
     }
 
-    void ProgramLoop::test_addObj(Circle& circle, unsigned int id) {
-        m_Renderer.addCircle(id, circle);
-    }
-
-    void ProgramLoop::test_rmObj(unsigned int id) {
-        m_Renderer.removeCircle(id);
-    }
-
-    void ProgramLoop::test_updObj(unsigned int id) {
-        m_Renderer.refreshCircle(id);
+    void ProgramLoop::userInput(UserInput input, void* data) {
+        if (input == KEY_PRESSED || input == KEY_RELEASED) {
+            KeyboardInputData dat = *((KeyboardInputData*) data);
+            if (dat == SPACE) {
+                std::cout << "Space pressed or released\n";
+                if (input == KEY_RELEASED)
+                    std::cout << " Actually released\n";
+            }
+        }
     }
 }

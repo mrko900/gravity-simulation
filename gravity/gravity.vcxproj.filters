@@ -116,6 +116,9 @@
     <ClInclude Include="src\Physics\GravitationalEnvironment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\App\UserInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\test_vertex.shader" />

@@ -7,6 +7,7 @@
 #include "../../Graphics/GL/GLRenderer.h"
 #include "../../GL/GLMacros.h"
 #include <chrono>
+#include "../UserInput.h"
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS glHelper
@@ -25,6 +26,7 @@ using mrko900::gravity::graphics::Circle;
 using mrko900::gravity::graphics::Appearance;
 
 using enum mrko900::gravity::gl::GLHelper::Function;
+using enum mrko900::gravity::app::UserInput;
 
 namespace mrko900::gravity::app::win {
     static std::string readFile(const std::string& path) {
@@ -43,7 +45,7 @@ namespace mrko900::gravity::app::win {
 
     WinProgram::WinProgram(HINSTANCE hInstance, int nCmdShow) : m_HInstance(hInstance), m_NCmdShow(nCmdShow),
         m_CurrentWindow(NULL), m_RunningGL(false), m_ViewportUpdateRequested(false), m_ViewportNewWidth(0),
-        m_ViewportNewHeight(0), m_GLHelper(nullptr) {
+        m_ViewportNewHeight(0), m_GLHelper(nullptr), m_ProgramLoopRunning(false), m_ProgramLoop(nullptr) {
     }
 
     void WinProgram::run() {
@@ -168,6 +170,8 @@ namespace mrko900::gravity::app::win {
         renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
 
         ProgramLoop programLoop = ProgramLoop(renderer);
+        m_ProgramLoop = &programLoop;
+        m_ProgramLoopRunning = true;
 
         wglSwapIntervalEXT(0);
 
@@ -207,6 +211,9 @@ namespace mrko900::gravity::app::win {
 
             SwapBuffers(hdc);
         }
+
+        m_ProgramLoopRunning = false;
+        m_ProgramLoop = nullptr;
     }
 
     WNDCLASSEXW WinProgram::wndClass(HINSTANCE hInstance) {
@@ -298,6 +305,24 @@ namespace mrko900::gravity::app::win {
             obj.updateViewport(LOWORD(lParam), HIWORD(lParam));
     }
 
+    void WinProgram::onWmKey(HWND hWnd, WPARAM wParam, UserInput ui) {
+        WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
+        if (!obj.m_ProgramLoopRunning)
+            return;
+        if (wParam == VK_SPACE) {
+            KeyboardInputData data = KeyboardInputData::SPACE;
+            obj.m_ProgramLoop->userInput(ui, &data);
+        }
+    }
+
+    void WinProgram::onWmKeyDown(HWND hWnd, WPARAM wParam) {
+        onWmKey(hWnd, wParam, KEY_PRESSED);
+    }
+
+    void WinProgram::onWmKeyUp(HWND hWnd, WPARAM wParam) {
+        onWmKey(hWnd, wParam, KEY_RELEASED);
+    }
+
     LRESULT WinProgram::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
         switch (message) {
             case WM_PAINT:
@@ -310,6 +335,12 @@ namespace mrko900::gravity::app::win {
                 break;
             case WM_DESTROY:
                 PostQuitMessage(EXIT_SUCCESS);
+                break;
+            case WM_KEYDOWN:
+                onWmKeyDown(hWnd, wParam);
+                break;
+            case WM_KEYUP:
+                onWmKeyUp(hWnd, wParam);
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);

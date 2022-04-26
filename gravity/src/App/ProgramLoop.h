@@ -2,6 +2,7 @@
 
 #include "../GL/GLHelper.h"
 #include "../Graphics/Renderer.h"
+#include "UserInput.h"
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -13,9 +14,7 @@ namespace mrko900::gravity::app {
         ProgramLoop& operator=(ProgramLoop&& other) = delete;
         void operator()();
         void updateViewport(unsigned short newWidth, unsigned short newHeight);
-        void test_addObj(mrko900::gravity::graphics::Circle& c, unsigned int id);
-        void test_rmObj(unsigned int id);
-        void test_updObj(unsigned int id);
+        void userInput(UserInput input, void* data);
 
     private:
         bool m_ViewportUpdateRequested;
