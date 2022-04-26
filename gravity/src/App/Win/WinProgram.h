@@ -39,5 +39,6 @@ namespace mrko900::gravity::app::win {
         static void onWmKey(HWND hWnd, WPARAM wParam, UserInput ui);
         static void onWmKeyDown(HWND hWnd, WPARAM wParam);
         static void onWmKeyUp(HWND hWnd, WPARAM wParam);
+        static void onWmLButtonDown(HWND hWnd, LPARAM lParam);
     };
 }

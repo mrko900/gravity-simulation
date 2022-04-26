@@ -301,7 +301,6 @@ namespace mrko900::gravity::app::win {
     void WinProgram::onWmSize(HWND hWnd, LPARAM lParam) {
         WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
         if (obj.m_RunningGL)
-            // requesting viewport update in a rendering loop instead of updating it here right away
             obj.updateViewport(LOWORD(lParam), HIWORD(lParam));
     }
 
@@ -323,6 +322,20 @@ namespace mrko900::gravity::app::win {
         onWmKey(hWnd, wParam, KEY_RELEASED);
     }
 
+    void WinProgram::onWmLButtonDown(HWND hWnd, LPARAM lParam) {
+        WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
+        if (!obj.m_ProgramLoopRunning)
+            return;
+        RECT clientRect;
+        GetClientRect(hWnd, &clientRect);
+        MouseClickInputData data = MouseClickInputData(
+            LOWORD(lParam), 
+            clientRect.bottom - HIWORD(lParam),
+            MouseButton::LEFT
+        );
+        obj.m_ProgramLoop->userInput(MOUSE_PRESSED, &data);
+    }
+
     LRESULT WinProgram::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
         switch (message) {
             case WM_PAINT:
@@ -341,6 +354,9 @@ namespace mrko900::gravity::app::win {
                 break;
             case WM_KEYUP:
                 onWmKeyUp(hWnd, wParam);
+                break;
+            case WM_LBUTTONDOWN:
+                onWmLButtonDown(hWnd, lParam);
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);

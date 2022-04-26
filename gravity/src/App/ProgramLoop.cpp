@@ -41,6 +41,11 @@ namespace mrko900::gravity::app {
                 if (input == KEY_RELEASED)
                     std::cout << " Actually released\n";
             }
+        } else if (input == MOUSE_PRESSED) {
+            MouseClickInputData dat = *((MouseClickInputData*) data);
+            if (dat.button == MouseButton::LEFT) {
+                std::cout << "\" lbutton pressed at " << dat.x << " " << dat.y << '\n';
+            }
         }
     }
 }
