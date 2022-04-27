@@ -1,28 +1,24 @@
 #pragma once
 
 namespace mrko900::gravity::graphics {
-    struct Appearance {
+    enum class AppearanceType {
+        PLAIN_COLOR,
+        TEXTURE
+    };
+
+    struct PlainColor {
         float r, g, b, a;
-        bool operator==(const Appearance& other) {
-            return r == other.r
-                && g == other.g
-                && b == other.b
-                && a == other.a;
-        }
+    };
+
+    struct Appearance {
+        AppearanceType type;
+        void* ptr;
     };
 
     struct Circle {
         float x, y, radius;
         Appearance appearance;
         int layer;
-
-        // todo remove ?
-        bool operator==(const Circle& other) {
-            return appearance == other.appearance
-                && x == other.x
-                && y == other.y
-                && radius == other.radius;
-        }
     };
 
     struct Rectangle {

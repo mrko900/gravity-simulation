@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\App\ProgramLoop.cpp" />
+    <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Physics\DynamicCoordinatesImpl.cpp" />
     <ClCompile Include="src\Physics\GravitationalEnvironment.cpp" />
     <ClCompile Include="src\Physics\UniformForceSimulation.cpp" />
@@ -39,6 +40,7 @@
   <ItemGroup>
     <ClInclude Include="src\App\ProgramLoop.h" />
     <ClInclude Include="src\App\UserInput.h" />
+    <ClInclude Include="src\Graphics\Texture.h" />
     <ClInclude Include="src\Physics\DynamicCoordinatesImpl.h" />
     <ClInclude Include="src\Physics\GravitationalEnvironment.h" />
     <ClInclude Include="src\Physics\UniformForceSimulation.h" />

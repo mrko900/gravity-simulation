@@ -2,15 +2,16 @@
 
 layout(location = 1) in vec2 coord;
 layout(location = 0) out vec4 out_Color;
-layout(location = 0) uniform float xRadius;
-layout(location = 1) uniform float yRadius;
-layout(location = 2) uniform vec2 center;
+layout(location = 0) uniform float u_XRadius;
+layout(location = 1) uniform float u_YRadius;
+layout(location = 2) uniform vec2 u_Center;
+layout(location = 3) uniform vec4 u_Color;
 
 void main() {
-    float x = coord.x - center.x;
-    float y = coord.y - center.y;
-    if ((x * x) / (xRadius * xRadius) + (y * y) / (yRadius * yRadius) <= 1)
-        out_Color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    float x = coord.x - u_Center.x;
+    float y = coord.y - u_Center.y;
+    if ((x * x) / (u_XRadius * u_XRadius) + (y * y) / (u_YRadius * u_YRadius) <= 1)
+        out_Color = u_Color;
     else
         out_Color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }

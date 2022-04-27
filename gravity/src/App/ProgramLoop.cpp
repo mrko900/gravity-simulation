@@ -9,6 +9,8 @@ using mrko900::gravity::gl::GLHelper;
 using mrko900::gravity::graphics::Circle;
 using mrko900::gravity::graphics::Appearance;
 
+using namespace mrko900::gravity::graphics; // todo remove
+
 using enum mrko900::gravity::app::UserInput;
 using enum mrko900::gravity::app::KeyboardInputData;
 
@@ -19,7 +21,9 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::init() {
-
+        PlainColor* color = new PlainColor(0.1f, 0.1f, 0.8f, 0.1f);
+        Circle* circle = new Circle(0.0f, 0.0f, 0.5f, Appearance(AppearanceType::PLAIN_COLOR, color), 3);
+        m_Renderer.addCircle(3, *circle);
     }
 
     void ProgramLoop::run() {

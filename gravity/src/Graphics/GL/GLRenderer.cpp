@@ -59,12 +59,16 @@ namespace mrko900::gravity::graphics::gl {
 
             if (entry.second.type == CIRCLE) {
 #define circle entry.second.def.circleDef
+#define circlePlainColor ((PlainColor*) circle.origin->appearance.ptr)
                 glUniform1f(0, circle.xRadius);
                 glUniform1f(1, circle.yRadius);
                 glUniform2f(2, circle.x, circle.y);
+                if (circle.origin->appearance.type == AppearanceType::PLAIN_COLOR)
+                    glUniform4f(3, circlePlainColor->r, circlePlainColor->g, circlePlainColor->b, circlePlainColor->a);
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
+#undef circlePlainColor
             }
         }
     }

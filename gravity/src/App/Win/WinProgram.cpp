@@ -105,7 +105,8 @@ namespace mrko900::gravity::app::win {
             "glBufferSubData",
             "glGetIntegerv",
             "glDisable",
-            "glDeleteBuffers"
+            "glDeleteBuffers",
+            "glUniform4f"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -140,7 +141,8 @@ namespace mrko900::gravity::app::win {
             IGL_BUFFER_SUB_DATA,
             IGL_GET_INTEGERV,
             IGL_DISABLE,
-            IGL_DELETE_BUFFERS
+            IGL_DELETE_BUFFERS,
+            IGL_UNIFORM4F
         };
 
         int index;
