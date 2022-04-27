@@ -44,7 +44,7 @@ namespace mrko900::gravity::app {
                 delete[] textureData;
             }
             unsigned int levels() override {
-                return 1;
+                return 8;
             }
         };
         Texture* texture = new TextureClass(textureData, size);

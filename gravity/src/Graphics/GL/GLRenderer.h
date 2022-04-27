@@ -23,6 +23,10 @@ namespace mrko900::gravity::graphics::gl {
         void refreshFigure(unsigned int id) override;
         void viewport(unsigned short viewportWidth, unsigned short viewportHeight) override;
         void coordinateSystem(float xBegin, float xEnd, float yBegin, float yEnd) override;
+        void setAutoGenTextureLevels(bool autoGenTextureLevels);
+        bool isAutoGenTextureLevels();
+        void setAutoGenTextureLevelsAfter(unsigned int autoGenTextureLevelsAfter);
+        unsigned int getAutoGenTextureLevelsAfter();
 
     private:
         struct CircleDef {
@@ -55,5 +59,7 @@ namespace mrko900::gravity::graphics::gl {
         float m_CoordXEnd;
         float m_CoordYBegin;
         float m_CoordYEnd;
+        bool m_AutoGenLOD;
+        unsigned int m_AutoGenLODAfter;
     };
 }

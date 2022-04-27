@@ -112,7 +112,8 @@ namespace mrko900::gravity::app::win {
             "glCreateTextures",
             "glBindTexture",
             "glTexStorage2D",
-            "glTexSubImage2D"
+            "glTexSubImage2D",
+            "glGenerateMipmap"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -154,7 +155,8 @@ namespace mrko900::gravity::app::win {
             IGL_CREATE_TEXTURES,
             IGL_BIND_TEXTURE,
             IGL_TEX_STORAGE2D,
-            IGL_TEX_SUB_IMAGE2D
+            IGL_TEX_SUB_IMAGE2D,
+            IGL_GENERATE_MIPMAP
         };
 
         int index;
@@ -177,6 +179,7 @@ namespace mrko900::gravity::app::win {
         const std::string fragmentShaderStr = readFile("shaders/test_fragment.shader");
         GLRenderer glRenderer = GLRenderer(glHelper, { vertexShaderStr, fragmentShaderStr });
         glRenderer.init();
+        glRenderer.setAutoGenTextureLevels(true);
         Renderer& renderer = glRenderer;
         RECT dimensions;
         GetClientRect(m_CurrentWindow, &dimensions);

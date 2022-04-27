@@ -15,7 +15,8 @@ using enum mrko900::gravity::graphics::FigureType;
 
 namespace mrko900::gravity::graphics::gl {
     GLRenderer::GLRenderer(GLHelper& glHelper, Shaders shaders) : m_GLHelper(glHelper), m_Shaders(std::move(shaders)),
-        m_CoordXBegin(0.0f), m_CoordXEnd(0.0f), m_CoordYBegin(0.0f), m_CoordYEnd(0.0f) {
+        m_CoordXBegin(0.0f), m_CoordXEnd(0.0f), m_CoordYBegin(0.0f), m_CoordYEnd(0.0f), m_AutoGenLOD(false),
+        m_AutoGenLODAfter(0) {
     }
 
     void GLRenderer::init() {
@@ -106,8 +107,13 @@ namespace mrko900::gravity::graphics::gl {
             glBindTexture(GL_TEXTURE_2D, texture);
             GLTextureBuffer textureBuffer(m_GLHelper);
 #define texture (*((Texture*) circle.appearance.ptr))
-            for (unsigned int level = 0; level < texture.levels(); ++level)
+            for (unsigned int level = 0; level < texture.levels(); ++level) {
                 texture.writeLevel(level, textureBuffer);
+                if (m_AutoGenLOD && level == m_AutoGenLODAfter) {
+                    glGenerateMipmap(GL_TEXTURE_2D);
+                    break;
+                }
+            }
 #undef texture
         }
 
@@ -186,5 +192,13 @@ namespace mrko900::gravity::graphics::gl {
             circle.xRadius = xRadius;
             circle.yRadius = yRadius;
         }
+    }
+
+    void GLRenderer::setAutoGenTextureLevels(bool autoGenTextureLevels) {
+        m_AutoGenLOD = autoGenTextureLevels;
+    }
+
+    bool GLRenderer::isAutoGenTextureLevels() {
+        return m_AutoGenLOD;
     }
 }
