@@ -202,7 +202,7 @@ namespace mrko900::gravity::app::win {
 
         coordinateSystemHelper.k = ratio;
 
-        ProgramLoop programLoop = ProgramLoop(renderer, coordinateSystemHelper);
+        ProgramLoop programLoop = ProgramLoop(renderer, coordinateSystemHelper, dimensions.right, dimensions.bottom);
         programLoop.init();
         m_ProgramLoop = &programLoop;
         m_ProgramLoopRunning = true;

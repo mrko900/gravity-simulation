@@ -20,9 +20,10 @@ using enum mrko900::gravity::app::KeyboardInputData;
 
 namespace mrko900::gravity::app {
     ProgramLoop::ProgramLoop(mrko900::gravity::graphics::Renderer& renderer, 
-                             CoordinateSystemHelper& coordinateSystemHelper) : m_Renderer(renderer),
+                             CoordinateSystemHelper& coordinateSystemHelper,
+                             unsigned short viewportWidth, unsigned short viewportHeight) : m_Renderer(renderer),
         m_CoordinateSystemHelper(coordinateSystemHelper), m_ViewportUpdateRequested(false),
-        m_ViewportNewWidth(0), m_ViewportNewHeight(0), m_PlayButton(nullptr) {
+        m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight), m_PlayButton(nullptr) {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -72,7 +73,7 @@ namespace mrko900::gravity::app {
 
     void ProgramLoop::run() {
         if (m_ViewportUpdateRequested) {
-            m_Renderer.viewport(m_ViewportNewWidth, m_ViewportNewHeight);
+            m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
             m_ViewportUpdateRequested = false;
 
             if (m_PlayButton != nullptr) {
@@ -91,10 +92,17 @@ namespace mrko900::gravity::app {
 
     void ProgramLoop::updateViewport(unsigned short newWidth, unsigned short newHeight) {
         m_ViewportUpdateRequested = true;
-        m_ViewportNewWidth = newWidth;
-        m_ViewportNewHeight = newHeight;
+        m_ViewportWidth = newWidth;
+        m_ViewportHeight = newHeight;
     }
 
     void ProgramLoop::userInput(UserInput input, void* data) {
+        if (input == MOUSE_PRESSED) {
+            MouseClickInputData mouseClick = *((MouseClickInputData*) data);
+            float x = weightX((float) mouseClick.x / (float) m_ViewportWidth * 2 - 1);
+            float y = weightY((float) mouseClick.y / (float) m_ViewportHeight * 2 - 1);
+            if (x > 0.0f && y < 0.0f)
+                std::cout << "You just clicked in the bottom right corner\n";
+        }
     }
 }

@@ -8,7 +8,8 @@
 namespace mrko900::gravity::app {
     class ProgramLoop {
     public:
-        ProgramLoop(mrko900::gravity::graphics::Renderer& renderer, CoordinateSystemHelper& coordinateSystemHelper);
+        ProgramLoop(mrko900::gravity::graphics::Renderer& renderer, CoordinateSystemHelper& coordinateSystemHelper,
+                    unsigned short viewportWidth, unsigned short viewportHeight);
         ProgramLoop(const ProgramLoop& other) = delete;
         ProgramLoop(ProgramLoop&& other) = delete;
         ~ProgramLoop();
@@ -21,8 +22,8 @@ namespace mrko900::gravity::app {
 
     private:
         bool m_ViewportUpdateRequested;
-        unsigned short m_ViewportNewWidth;
-        unsigned short m_ViewportNewHeight;
+        unsigned short m_ViewportWidth;
+        unsigned short m_ViewportHeight;
         mrko900::gravity::graphics::Renderer& m_Renderer;
         CoordinateSystemHelper& m_CoordinateSystemHelper;
         mrko900::gravity::graphics::Circle* m_PlayButton;
