@@ -6,6 +6,9 @@
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS m_GLHelper
 
+#define weightX(x) (m_CoordinateSystemHelper.weighted(0, x))
+#define weightY(y) (m_CoordinateSystemHelper.weighted(1, y))
+
 using mrko900::gravity::gl::GLHelper;
 using mrko900::gravity::graphics::Circle;
 using mrko900::gravity::graphics::Appearance;
@@ -16,8 +19,15 @@ using enum mrko900::gravity::app::UserInput;
 using enum mrko900::gravity::app::KeyboardInputData;
 
 namespace mrko900::gravity::app {
-    ProgramLoop::ProgramLoop(mrko900::gravity::graphics::Renderer& renderer) : m_Renderer(renderer),
-        m_ViewportUpdateRequested(false), m_ViewportNewWidth(0), m_ViewportNewHeight(0) {
+    ProgramLoop::ProgramLoop(mrko900::gravity::graphics::Renderer& renderer, 
+                             CoordinateSystemHelper& coordinateSystemHelper) : m_Renderer(renderer),
+        m_CoordinateSystemHelper(coordinateSystemHelper), m_ViewportUpdateRequested(false),
+        m_ViewportNewWidth(0), m_ViewportNewHeight(0), m_PlayButton(nullptr) {
+    }
+
+    ProgramLoop::~ProgramLoop() {
+        if (m_PlayButton != nullptr)
+            delete m_PlayButton;
     }
 
     void ProgramLoop::init() {
@@ -49,14 +59,23 @@ namespace mrko900::gravity::app {
         };
         Texture* texture = new TextureClass(textureData, size);
 
-        Circle* circle = new Circle { 0.0f, 0.0f, 0.5f, Appearance(AppearanceType::TEXTURE, texture), 3 };
-        m_Renderer.addCircle(3, *circle);
+        m_PlayButton = new Circle { weightX(1.0f - weightY(0.1f)), weightY(-0.9f), weightY(0.08f),
+            Appearance(AppearanceType::TEXTURE, texture), 3 };
+
+        m_Renderer.addCircle(3, *m_PlayButton);
     }
 
     void ProgramLoop::run() {
         if (m_ViewportUpdateRequested) {
             m_Renderer.viewport(m_ViewportNewWidth, m_ViewportNewHeight);
             m_ViewportUpdateRequested = false;
+
+            if (m_PlayButton != nullptr) {
+                m_PlayButton->x = weightX(1.0f - weightY(0.1f));
+                m_PlayButton->y = weightY(-0.9f);
+                m_PlayButton->radius = weightY(0.08f);
+            }
+            m_Renderer.refreshFigure(3);
         }
 
         m_Renderer.render();
@@ -69,6 +88,5 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::userInput(UserInput input, void* data) {
-
     }
 }

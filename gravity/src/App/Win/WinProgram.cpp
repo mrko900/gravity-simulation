@@ -8,6 +8,7 @@
 #include "../../GL/GLMacros.h"
 #include <chrono>
 #include "../UserInput.h"
+#include <stdexcept>
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS glHelper
@@ -186,7 +187,22 @@ namespace mrko900::gravity::app::win {
         float ratio = (float) dimensions.bottom / (float) dimensions.right;
         renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
 
-        ProgramLoop programLoop = ProgramLoop(renderer);
+        class A : public CoordinateSystemHelper {
+        public:
+            float k = 0.0f;
+            float weighted(unsigned int coordinate, float normalized) {
+                if (coordinate == 0) // x
+                    return normalized;
+                else if (coordinate == 1) // y
+                    return normalized * k;
+                else
+                    throw std::invalid_argument("unknown coordinate: not 0 (x) or 1 (y)");
+            }
+        } coordinateSystemHelper;
+
+        coordinateSystemHelper.k = ratio;
+
+        ProgramLoop programLoop = ProgramLoop(renderer, coordinateSystemHelper);
         programLoop.init();
         m_ProgramLoop = &programLoop;
         m_ProgramLoopRunning = true;
@@ -211,6 +227,7 @@ namespace mrko900::gravity::app::win {
 
             if (m_ViewportUpdateRequested) {
                 ratio = (float) m_ViewportNewHeight / (float) m_ViewportNewWidth;
+                coordinateSystemHelper.k = ratio;
                 programLoop.updateViewport(m_ViewportNewWidth, m_ViewportNewHeight);
                 renderer.coordinateSystem(-1.0f, 1.0f, -ratio, ratio);
                 m_ViewportUpdateRequested = false;

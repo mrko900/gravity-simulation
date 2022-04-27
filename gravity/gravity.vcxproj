@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\App\CoordinateSystemHelper.cpp" />
     <ClCompile Include="src\App\ProgramLoop.cpp" />
     <ClCompile Include="src\Graphics\GL\GLTextureBuffer.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
@@ -39,6 +40,7 @@
     <ClCompile Include="src\Physics\VectorModelImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\App\CoordinateSystemHelper.h" />
     <ClInclude Include="src\App\ProgramLoop.h" />
     <ClInclude Include="src\App\UserInput.h" />
     <ClInclude Include="src\Graphics\GL\GLTextureBuffer.h" />
