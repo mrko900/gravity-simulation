@@ -136,4 +136,5 @@ namespace mrko900::gravity::gl::types {
     typedef void (*FUNC_GL_LOAD_IDENTITY) ();
     typedef void (*FUNC_GL_DISABLE) (GLenum cap);
     typedef void (*FUNC_GL_DELETE_BUFFERS) (GLsizei n, const GLuint* buffers);
+    typedef void (*FUNC_GL_UNIFORM1UI) (GLint location, GLuint v0);
 }

@@ -106,7 +106,13 @@ namespace mrko900::gravity::app::win {
             "glGetIntegerv",
             "glDisable",
             "glDeleteBuffers",
-            "glUniform4f"
+            "glUniform4f",
+            "glUniform1ui",
+            "glBindTextureUnit",
+            "glCreateTextures",
+            "glBindTexture",
+            "glTexStorage2D",
+            "glTexSubImage2D"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -142,7 +148,13 @@ namespace mrko900::gravity::app::win {
             IGL_GET_INTEGERV,
             IGL_DISABLE,
             IGL_DELETE_BUFFERS,
-            IGL_UNIFORM4F
+            IGL_UNIFORM4F,
+            IGL_UNIFORM1UI,
+            IGL_BIND_TEXTURE_UNIT,
+            IGL_CREATE_TEXTURES,
+            IGL_BIND_TEXTURE,
+            IGL_TEX_STORAGE2D,
+            IGL_TEX_SUB_IMAGE2D
         };
 
         int index;

@@ -29,6 +29,7 @@ namespace mrko900::gravity::graphics::gl {
             float x, y, xRadius, yRadius;
             Circle* origin;
             mrko900::gravity::gl::types::GLuint buffer;
+            mrko900::gravity::gl::types::GLuint texture;
         };
 
         struct RectangleDef {

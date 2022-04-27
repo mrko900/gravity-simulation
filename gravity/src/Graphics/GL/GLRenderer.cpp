@@ -3,6 +3,7 @@
 #include <iostream>
 #include "../../GL/GLMacros.h"
 #include "../../GL/GLTypes.h"
+#include "GLTextureBuffer.h"
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS m_GLHelper
@@ -63,8 +64,13 @@ namespace mrko900::gravity::graphics::gl {
                 glUniform1f(0, circle.xRadius);
                 glUniform1f(1, circle.yRadius);
                 glUniform2f(2, circle.x, circle.y);
-                if (circle.origin->appearance.type == AppearanceType::PLAIN_COLOR)
-                    glUniform4f(3, circlePlainColor->r, circlePlainColor->g, circlePlainColor->b, circlePlainColor->a);
+                if (circle.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
+                    glUniform1ui(3, 1);
+                    glUniform4f(4, circlePlainColor->r, circlePlainColor->g, circlePlainColor->b, circlePlainColor->a);
+                } else {
+                    glUniform1ui(3, 2);
+                    glBindTextureUnit(0, circle.texture);
+                }
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
@@ -94,8 +100,19 @@ namespace mrko900::gravity::graphics::gl {
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
         glBindVertexBuffer(0, buf, 0, 2 * sizeof(GLfloat));
 
+        GLuint texture;
+        if (circle.appearance.type == AppearanceType::TEXTURE) {
+            glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            GLTextureBuffer textureBuffer(m_GLHelper);
+#define texture (*((Texture*) circle.appearance.ptr))
+            for (unsigned int level = 0; level < texture.levels(); ++level)
+                texture.writeLevel(level, textureBuffer);
+#undef texture
+        }
+
         Def def;
-        def.circleDef = CircleDef(x, y, xRadius, yRadius, &circle, buf);
+        def.circleDef = CircleDef(x, y, xRadius, yRadius, &circle, buf, texture);
         m_Figures.insert(std::make_pair(id, Figure(CIRCLE, def)));
     }
 

@@ -93,6 +93,7 @@
 #define INDEX_FUNC_GL_LOAD_IDENTITY mrko900::gravity::gl::GLHelper::IGL_LOAD_IDENTITY
 #define INDEX_FUNC_GL_DISABLE mrko900::gravity::gl::GLHelper::IGL_DISABLE
 #define INDEX_FUNC_GL_DELETE_BUFFERS mrko900::gravity::gl::GLHelper::IGL_DELETE_BUFFERS
+#define INDEX_FUNC_GL_UNIFORM1UI mrko900::gravity::gl::GLHelper::IGL_UNIFORM1UI
 
 // function macros
 #define glClear GETFUNC(mrko900::gravity::gl::types::FUNC_GL_CLEAR, INDEX_FUNC_GL_CLEAR)
@@ -221,6 +222,7 @@
 #define glLoadIdentity GETFUNC(mrko900::gravity::gl::types::FUNC_GL_LOAD_IDENTITY, INDEX_FUNC_GL_LOAD_IDENTITY)
 #define glDisable GETFUNC(mrko900::gravity::gl::types::FUNC_GL_DISABLE, INDEX_FUNC_GL_DISABLE)
 #define glDeleteBuffers GETFUNC(mrko900::gravity::gl::types::FUNC_GL_DELETE_BUFFERS, INDEX_FUNC_GL_DELETE_BUFFERS)
+#define glUniform1ui GETFUNC(mrko900::gravity::gl::types::FUNC_GL_UNIFORM1UI, INDEX_FUNC_GL_UNIFORM1UI)
 
 // gl constants
 #define GL_TRIANGLES 0x4
