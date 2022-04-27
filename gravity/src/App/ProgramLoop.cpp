@@ -63,6 +63,11 @@ namespace mrko900::gravity::app {
             Appearance(AppearanceType::TEXTURE, texture), 3 };
 
         m_Renderer.addCircle(3, *m_PlayButton);
+
+        PlainColor* plainColor = new PlainColor { 0.0f, 0.0f, 1.0f, 1.0f }; // mem leak
+        Circle* circle = new Circle { 0.0f, 0.0f, 0.5f, // mem leak
+            Appearance(AppearanceType::PLAIN_COLOR, plainColor), 0 };
+        m_Renderer.addCircle(-1, *circle);
     }
 
     void ProgramLoop::run() {
@@ -75,7 +80,10 @@ namespace mrko900::gravity::app {
                 m_PlayButton->y = weightY(-0.9f);
                 m_PlayButton->radius = weightY(0.08f);
             }
+
+            // refresh figures manually
             m_Renderer.refreshFigure(3);
+            m_Renderer.refreshFigure(-1);
         }
 
         m_Renderer.render();

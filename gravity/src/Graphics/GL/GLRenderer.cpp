@@ -115,7 +115,8 @@ namespace mrko900::gravity::graphics::gl {
                 }
             }
 #undef texture
-        }
+        } else
+            texture = 0;
 
         Def def;
         def.circleDef = CircleDef(x, y, xRadius, yRadius, &circle, buf, texture);
@@ -167,31 +168,6 @@ namespace mrko900::gravity::graphics::gl {
         m_CoordXEnd = xEnd;
         m_CoordYBegin = yBegin;
         m_CoordYEnd = yEnd;
-
-        // update circles
-        for (auto& entry : m_Figures) {
-            if (entry.second.type != CIRCLE)
-                continue;
-
-            CircleDef& circle = entry.second.def.circleDef;
-
-            circle.x = (circle.origin->x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
-            circle.y = (circle.origin->y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
-            float xRadius = 2 * circle.origin->radius / (m_CoordXEnd - m_CoordXBegin);
-            float yRadius = 2 * circle.origin->radius / (m_CoordYEnd - m_CoordYBegin);
-            GLfloat positions[] {
-                circle.x - xRadius, circle.y - yRadius,
-                circle.x - xRadius, circle.y + yRadius,
-                circle.x + xRadius, circle.y - yRadius,
-                circle.x + xRadius, circle.y + yRadius
-            };
-
-            glBindBuffer(GL_ARRAY_BUFFER, circle.buffer);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, 8 * sizeof(GLfloat), positions);
-
-            circle.xRadius = xRadius;
-            circle.yRadius = yRadius;
-        }
     }
 
     void GLRenderer::setAutoGenTextureLevels(bool autoGenTextureLevels) {
