@@ -45,13 +45,15 @@ namespace mrko900::gravity::app {
         m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
             float normalizedX = (float) clickX / (float) m_ViewportWidth * 2 - 1;
             float normalizedY = (float) clickY / (float) m_ViewportHeight * 2 - 1;
-            //float weightedX = weightY(normalizedX);
-            //float weightedY = weightY(normalizedY);
+            float weightedX = weightX(normalizedX);
+            float weightedY = weightY(normalizedY);
             //float dist = distance(weightedX, weightedY, m_PlayButton->x, m_PlayButton->y);
-            float rx = 2 * m_PlayButton->radius / weightX(2.0f);
-            float ry = 2 * m_PlayButton->radius / weightY(2.0f);
-            if (((normalizedX - 0.4f) * (normalizedX - 0.4f)) / (rx * rx) 
-                + ((normalizedY + 0.1f) * (normalizedY + 0.1f)) / (ry * ry) <= 1) {
+            float x = weightedX - m_PlayButton->x;
+            float y = weightedY - m_PlayButton->y;
+            float r = m_PlayButton->radius;
+            if (
+                x * x + y * y <= r * r
+                ) {
                 // click
                 m_PlayButton->appearance.plainColor().g += 0.1f;
                 m_PlayButton->appearance.plainColor().r -= 0.03f;
@@ -80,8 +82,8 @@ namespace mrko900::gravity::app {
                 //m_PlayButton->x = weightX(1.0f - weightY(0.1f));
                 //m_PlayButton->y = weightY(-0.9f);
                 //m_PlayButton->radius = weightY(0.08f);
-                m_PlayButton->x = weightX(0.4f);
-                m_PlayButton->y = weightY(-0.1f);
+                m_PlayButton->x = weightX(-0.4f);
+                m_PlayButton->y = weightY(0.3f);
                 m_PlayButton->radius = weightX(0.5f);
             }
 
