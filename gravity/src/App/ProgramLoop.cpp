@@ -8,6 +8,7 @@
 
 #define weightX(x) (m_CoordinateSystemHelper.weighted(0, x))
 #define weightY(y) (m_CoordinateSystemHelper.weighted(1, y))
+#define distance(x1, y1, x2, y2) (sqrt(pow(x1 - x2, 2) + pow(y1 - y1, 2)))
 
 using mrko900::gravity::gl::GLHelper;
 using mrko900::gravity::graphics::Circle;
@@ -23,68 +24,68 @@ namespace mrko900::gravity::app {
                              CoordinateSystemHelper& coordinateSystemHelper,
                              unsigned short viewportWidth, unsigned short viewportHeight) : m_Renderer(renderer),
         m_CoordinateSystemHelper(coordinateSystemHelper), m_ViewportUpdateRequested(false),
-        m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight), m_PlayButton(nullptr) {
+        m_ViewportInitializationRequested(false), m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight), 
+        m_PlayButton(nullptr) {
     }
 
     ProgramLoop::~ProgramLoop() {
-        if (m_PlayButton != nullptr)
+        if (m_PlayButton != nullptr) {
             delete m_PlayButton;
+            delete m_PlayButtonColor;
+        }
     }
 
     void ProgramLoop::init() {
-        constexpr unsigned int size = 64;
-        float* textureData = new float[sizeof(float) * size * size];
-        for (int y = 0; y < size; ++y) {
-            for (int x = 0; x < size; ++x) {
-                textureData[(y * size + x) * sizeof(float)] = (float) ((x & y) & 0xFF) / (float) (size - 1);
-                textureData[(y * size + x) * sizeof(float) + 1] = (float) ((x | y) & 0xFF) / (float) (size - 1);
-                textureData[(y * size + x) * sizeof(float) + 2] = (float) ((x ^ y) & 0xFF) / (float) (size - 1);
-                textureData[(y * size + x) * sizeof(float) + 3] = 1.0f;
-            }
-        }
-
-        class TextureClass : public Texture {
-        public:
-            float* textureData;
-            unsigned int size;
-            TextureClass(float* textureData, unsigned int size) : textureData(textureData), size(size) {
-            }
-            void writeLevel(unsigned int level, TextureBuffer& buffer) override {
-                buffer.alloc(1, size, size);
-                buffer.write(0, 0, 0, size, size, textureData);
-                delete[] textureData;
-            }
-            unsigned int levels() override {
-                return 8;
-            }
+        m_PlayButtonColor = new PlainColor { 0.3f, 0.5f, 0.3f, 1.0f };
+        m_PlayButton = new Circle { 
+            0.0f, 0.0f, 0.0f, Appearance { AppearanceType::PLAIN_COLOR, m_PlayButtonColor }, 0
         };
-        Texture* texture = new TextureClass(textureData, size);
+        m_Renderer.addCircle(0, *m_PlayButton);
 
-        m_PlayButton = new Circle { weightX(1.0f - weightY(0.1f)), weightY(-0.9f), weightY(0.08f),
-            Appearance(AppearanceType::TEXTURE, texture), 3 };
+        m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
+            float normalizedX = (float) clickX / (float) m_ViewportWidth * 2 - 1;
+            float normalizedY = (float) clickY / (float) m_ViewportHeight * 2 - 1;
+            //float weightedX = weightY(normalizedX);
+            //float weightedY = weightY(normalizedY);
+            //float dist = distance(weightedX, weightedY, m_PlayButton->x, m_PlayButton->y);
+            float rx = 2 * m_PlayButton->radius / weightX(2.0f);
+            float ry = 2 * m_PlayButton->radius / weightY(2.0f);
+            if (((normalizedX - 0.4f) * (normalizedX - 0.4f)) / (rx * rx) 
+                + ((normalizedY + 0.1f) * (normalizedY + 0.1f)) / (ry * ry) <= 1) {
+                // click
+                m_PlayButton->appearance.plainColor().g += 0.1f;
+                m_PlayButton->appearance.plainColor().r -= 0.03f;
+                m_PlayButton->appearance.plainColor().b += 0.15f;
+                if (m_PlayButton->appearance.plainColor().g >= 1.0f)
+                    m_PlayButton->appearance.plainColor().g -= 1.0f;
+                if (m_PlayButton->appearance.plainColor().r <= 0.0f)
+                    m_PlayButton->appearance.plainColor().r += 1.0f;
+                if (m_PlayButton->appearance.plainColor().b >= 1.0f)
+                    m_PlayButton->appearance.plainColor().b -= 1.0f;
+            }
+        });
 
-        m_Renderer.addCircle(3, *m_PlayButton);
-
-        PlainColor* plainColor = new PlainColor { 0.0f, 0.0f, 1.0f, 1.0f }; // mem leak
-        Circle* circle = new Circle { 0.0f, 0.0f, 0.5f, // mem leak
-            Appearance(AppearanceType::PLAIN_COLOR, plainColor), 0 };
-        m_Renderer.addCircle(-1, *circle);
+        m_ViewportUpdateRequested = true;
     }
 
     void ProgramLoop::run() {
         if (m_ViewportUpdateRequested) {
-            m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
+            if (!m_ViewportInitializationRequested)
+                m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
+            else
+                m_ViewportInitializationRequested = false;
             m_ViewportUpdateRequested = false;
 
             if (m_PlayButton != nullptr) {
-                m_PlayButton->x = weightX(1.0f - weightY(0.1f));
-                m_PlayButton->y = weightY(-0.9f);
-                m_PlayButton->radius = weightY(0.08f);
+                //m_PlayButton->x = weightX(1.0f - weightY(0.1f));
+                //m_PlayButton->y = weightY(-0.9f);
+                //m_PlayButton->radius = weightY(0.08f);
+                m_PlayButton->x = weightX(0.4f);
+                m_PlayButton->y = weightY(-0.1f);
+                m_PlayButton->radius = weightX(0.5f);
             }
 
-            // refresh figures manually
-            m_Renderer.refreshFigure(3);
-            m_Renderer.refreshFigure(-1);
+            m_Renderer.refreshFigure(0);
         }
 
         m_Renderer.render();
@@ -99,10 +100,8 @@ namespace mrko900::gravity::app {
     void ProgramLoop::userInput(UserInput input, void* data) {
         if (input == MOUSE_PRESSED) {
             MouseClickInputData mouseClick = *((MouseClickInputData*) data);
-            float x = weightX((float) mouseClick.x / (float) m_ViewportWidth * 2 - 1);
-            float y = weightY((float) mouseClick.y / (float) m_ViewportHeight * 2 - 1);
-            if (x > 0.0f && y < 0.0f)
-                std::cout << "You just clicked in the bottom right corner\n";
+            for (auto& button : m_Buttons)
+                button(mouseClick.x, mouseClick.y);
         }
     }
 }

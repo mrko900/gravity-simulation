@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Texture.h"
+
 namespace mrko900::gravity::graphics {
     enum class AppearanceType {
         PLAIN_COLOR,
@@ -13,6 +15,8 @@ namespace mrko900::gravity::graphics {
     struct Appearance {
         AppearanceType type;
         void* ptr;
+        PlainColor& plainColor();
+        Texture& texture();
     };
 
     struct Circle {

@@ -4,6 +4,8 @@
 #include "../Graphics/Renderer.h"
 #include "UserInput.h"
 #include "CoordinateSystemHelper.h"
+#include <functional>
+#include <vector>
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -22,10 +24,13 @@ namespace mrko900::gravity::app {
 
     private:
         bool m_ViewportUpdateRequested;
+        bool m_ViewportInitializationRequested;
         unsigned short m_ViewportWidth;
         unsigned short m_ViewportHeight;
         mrko900::gravity::graphics::Renderer& m_Renderer;
         CoordinateSystemHelper& m_CoordinateSystemHelper;
         mrko900::gravity::graphics::Circle* m_PlayButton;
+        mrko900::gravity::graphics::PlainColor* m_PlayButtonColor;
+        std::vector<std::function<void (unsigned short clickX, unsigned short clickY)>> m_Buttons;
     };
 }
