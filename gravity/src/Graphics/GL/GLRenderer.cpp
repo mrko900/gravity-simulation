@@ -28,7 +28,7 @@ namespace mrko900::gravity::graphics::gl {
         const char* rectVertexShaderSrc = m_Shaders.rectVertexShader.c_str();
         glShaderSource(rectVertexShader, 1, &rectVertexShaderSrc, nullptr);
         glCompileShader(rectVertexShader);
-        GLuint m_RectVertexShaderProgram = glCreateProgram();
+        m_RectVertexShaderProgram = glCreateProgram();
         glAttachShader(m_RectVertexShaderProgram, rectVertexShader);
         glProgramParameteri(m_RectVertexShaderProgram, GL_PROGRAM_SEPARABLE, GL_TRUE);
         glLinkProgram(m_RectVertexShaderProgram);
@@ -89,15 +89,16 @@ namespace mrko900::gravity::graphics::gl {
                 glProgramUniform2f(m_CircleFragmentShaderProgram, 2, circle.x, circle.y);
                 if (circle.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 1);
-                    glProgramUniform4f(m_CircleFragmentShaderProgram, 4,
-                                circlePlainColor->r, circlePlainColor->g, circlePlainColor->b, circlePlainColor->a);
+                    glProgramUniform4f(m_CircleFragmentShaderProgram, 4, circlePlainColor->r, 
+                                       circlePlainColor->g, circlePlainColor->b, circlePlainColor->a);
                 } else {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 2);
                     glBindTextureUnit(0, circle.texture);
                 }
-
+                
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                //if (first) std::cout << "fu" << glGetError() << '\n';
 #undef circle
 #undef circlePlainColor
             } else if (entry.second.type == RECTANGLE) {
