@@ -114,7 +114,16 @@ namespace mrko900::gravity::app::win {
             "glBindTexture",
             "glTexStorage2D",
             "glTexSubImage2D",
-            "glGenerateMipmap"
+            "glGenerateMipmap",
+            "glCreateProgramPipelines",
+            "glBindProgramPipeline",
+            "glProgramParameteri",
+            "glUseProgramStages",
+            "glGetProgramInfoLog",
+            "glProgramUniform1ui",
+            "glProgramUniform4f",
+            "glProgramUniform2f",
+            "glProgramUniform1f"
         };
         std::vector<GLHelper::Function> glLoadFuncIds {
             IGL_GET_STRING,
@@ -157,7 +166,16 @@ namespace mrko900::gravity::app::win {
             IGL_BIND_TEXTURE,
             IGL_TEX_STORAGE2D,
             IGL_TEX_SUB_IMAGE2D,
-            IGL_GENERATE_MIPMAP
+            IGL_GENERATE_MIPMAP,
+            IGL_CREATE_PROGRAM_PIPELINES,
+            IGL_BIND_PROGRAM_PIPELINE,
+            IGL_PROGRAM_PARAMETERI,
+            IGL_USE_PROGRAM_STAGES,
+            IGL_GET_PROGRAM_INFO_LOG,
+            IGL_PROGRAM_UNIFORM1UI,
+            IGL_PROGRAM_UNIFORM4F,
+            IGL_PROGRAM_UNIFORM2F,
+            IGL_PROGRAM_UNIFORM1F
         };
 
         int index;
@@ -176,9 +194,14 @@ namespace mrko900::gravity::app::win {
         HDC hdc = GetDC(m_CurrentWindow);
         m_RunningGL = true;
 
-        const std::string vertexShaderStr = readFile("shaders/test_vertex.shader");
-        const std::string fragmentShaderStr = readFile("shaders/test_fragment.shader");
-        GLRenderer glRenderer = GLRenderer(glHelper, { vertexShaderStr, fragmentShaderStr });
+        std::string rectVertexShaderStr = readFile("shaders/rect_vertex.shader");
+        std::string simpleFragmentShaderStr = readFile("shaders/simple_fragment.shader");
+        std::string circleFragmentShaderStr = readFile("shaders/circle_fragment.shader");
+        GLRenderer::Shaders shaders;
+        shaders.rectVertexShader = std::move(rectVertexShaderStr);
+        shaders.simpleFragmentShader = std::move(simpleFragmentShaderStr);
+        shaders.circleFragmentShader = std::move(circleFragmentShaderStr);
+        GLRenderer glRenderer = GLRenderer(glHelper, std::move(shaders));
         glRenderer.init();
         glRenderer.setAutoGenTextureLevels(true);
         Renderer& renderer = glRenderer;

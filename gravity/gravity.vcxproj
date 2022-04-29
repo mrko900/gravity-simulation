@@ -63,8 +63,9 @@
     <ClInclude Include="src\Physics\VectorModelImpl.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shaders\test_fragment.shader" />
-    <None Include="res\shaders\test_vertex.shader" />
+    <None Include="res\shaders\circle_fragment.shader" />
+    <None Include="res\shaders\rect_vertex.shader" />
+    <None Include="res\shaders\simple_fragment.shader" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

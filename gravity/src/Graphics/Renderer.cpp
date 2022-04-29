@@ -3,11 +3,11 @@
 namespace mrko900::gravity::graphics {
     Renderer::~Renderer() = default;
 
-    PlainColor& Appearance::plainColor() {
+    PlainColor& Appearance::plainColor() const {
         return *((PlainColor*) ptr);
     }
 
-    Texture& Appearance::texture() {
+    Texture& Appearance::texture() const {
         return *((Texture*) ptr);
     }
 }

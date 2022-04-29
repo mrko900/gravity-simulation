@@ -5,7 +5,7 @@
 namespace mrko900::gravity::gl {
     class GLHelper {
     private:
-        static constexpr unsigned int LEN = 86;
+        static constexpr unsigned int LEN = 88;
 
     public:
         enum Function {
@@ -94,7 +94,9 @@ namespace mrko900::gravity::gl {
             IGL_LOAD_IDENTITY = 82,
             IGL_DISABLE = 83,
             IGL_DELETE_BUFFERS = 84,
-            IGL_UNIFORM1UI = 85
+            IGL_UNIFORM1UI = 85,
+            IGL_PROGRAM_UNIFORM1UI = 86,
+            IGL_PROGRAM_UNIFORM4F = 87,
         };
 
         typedef void (*FuncPtr) ();

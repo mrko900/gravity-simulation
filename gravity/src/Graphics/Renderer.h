@@ -15,8 +15,8 @@ namespace mrko900::gravity::graphics {
     struct Appearance {
         AppearanceType type;
         void* ptr;
-        PlainColor& plainColor();
-        Texture& texture();
+        PlainColor& plainColor() const;
+        Texture& texture() const;
     };
 
     struct Circle {

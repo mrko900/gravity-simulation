@@ -10,8 +10,9 @@ namespace mrko900::gravity::graphics::gl {
     class GLRenderer : public Renderer {
     public:
         struct Shaders {
-            std::string testVertexShader;
-            std::string testFragmentShader;
+            std::string rectVertexShader;
+            std::string simpleFragmentShader;
+            std::string circleFragmentShader;
         };
 
         GLRenderer(mrko900::gravity::gl::GLHelper& glHelper, Shaders shaders);
@@ -37,7 +38,10 @@ namespace mrko900::gravity::graphics::gl {
         };
 
         struct RectangleDef {
+            float x, y, xHalf, yHalf;
             Rectangle* origin;
+            mrko900::gravity::gl::types::GLuint buffer;
+            mrko900::gravity::gl::types::GLuint texture;
         };
 
         union Def {
@@ -51,15 +55,23 @@ namespace mrko900::gravity::graphics::gl {
         };
 
         void refreshCircle(CircleDef& circle);
+        void refreshRectangle(RectangleDef& rectangle);
 
         mrko900::gravity::gl::GLHelper& m_GLHelper;
         Shaders m_Shaders;
         std::unordered_map<unsigned int, Figure> m_Figures;
+
         float m_CoordXBegin;
         float m_CoordXEnd;
         float m_CoordYBegin;
         float m_CoordYEnd;
+
         bool m_AutoGenLOD;
         unsigned int m_AutoGenLODAfter;
+
+        mrko900::gravity::gl::types::GLuint m_ProgramPipeline;
+        mrko900::gravity::gl::types::GLuint m_RectVertexShaderProgram;
+        mrko900::gravity::gl::types::GLuint m_SimpleFragmentShaderProgram;
+        mrko900::gravity::gl::types::GLuint m_CircleFragmentShaderProgram;
     };
 }
