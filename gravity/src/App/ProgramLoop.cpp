@@ -59,7 +59,7 @@ namespace mrko900::gravity::app {
 
         m_Menu = new Rectangle {
             0.0f, 0.0f, 1.0f, 1.0f, 
-            Appearance { AppearanceType::PLAIN_COLOR, m_MenuColor = new PlainColor { 0.5f, 0.3f, 0.8f, 1.0f } }, 0
+            Appearance { AppearanceType::PLAIN_COLOR, m_MenuColor = new PlainColor { 0.8f, 0.3f, 0.8f, 1.0f } }, 0
         };
         m_Renderer.addRectangle(2, *m_Menu);
 

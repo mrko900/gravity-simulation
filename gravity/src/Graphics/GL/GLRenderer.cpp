@@ -33,14 +33,14 @@ namespace mrko900::gravity::graphics::gl {
         glProgramParameteri(m_RectVertexShaderProgram, GL_PROGRAM_SEPARABLE, GL_TRUE);
         glLinkProgram(m_RectVertexShaderProgram);
 
-        //GLuint simpleFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        //const char* simpleFragmentShaderSrc = m_Shaders.simpleFragmentShader.c_str();
-        //glShaderSource(simpleFragmentShader, 1, &simpleFragmentShaderSrc, nullptr);
-        //glCompileShader(simpleFragmentShader);
-        //GLuint m_SimpleFragmentShaderProgram = glCreateProgram();
-        //glAttachShader(m_SimpleFragmentShaderProgram, simpleFragmentShader);
-        //glProgramParameteri(m_SimpleFragmentShaderProgram, GL_PROGRAM_SEPARABLE, GL_TRUE);
-        //glLinkProgram(m_SimpleFragmentShaderProgram);
+        GLuint simpleFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        const char* simpleFragmentShaderSrc = m_Shaders.simpleFragmentShader.c_str();
+        glShaderSource(simpleFragmentShader, 1, &simpleFragmentShaderSrc, nullptr);
+        glCompileShader(simpleFragmentShader);
+        m_SimpleFragmentShaderProgram = glCreateProgram();
+        glAttachShader(m_SimpleFragmentShaderProgram, simpleFragmentShader);
+        glProgramParameteri(m_SimpleFragmentShaderProgram, GL_PROGRAM_SEPARABLE, GL_TRUE);
+        glLinkProgram(m_SimpleFragmentShaderProgram);
 
         GLuint circleFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         const char* circleFragmentShaderSrc = m_Shaders.circleFragmentShader.c_str();
@@ -83,14 +83,14 @@ namespace mrko900::gravity::graphics::gl {
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_CircleFragmentShaderProgram);
 
 #define circle entry.second.def.circleDef
-#define circlePlainColor ((PlainColor*) circle.origin->appearance.ptr)
+#define circlePlainColor (circle.origin->appearance.plainColor())
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 0, circle.xRadius);
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 1, circle.yRadius);
                 glProgramUniform2f(m_CircleFragmentShaderProgram, 2, circle.x, circle.y);
                 if (circle.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 1);
-                    glProgramUniform4f(m_CircleFragmentShaderProgram, 4, circlePlainColor->r, 
-                                       circlePlainColor->g, circlePlainColor->b, circlePlainColor->a);
+                    glProgramUniform4f(m_CircleFragmentShaderProgram, 4, circlePlainColor.r, 
+                                       circlePlainColor.g, circlePlainColor.b, circlePlainColor.a);
                 } else {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 2);
                     glBindTextureUnit(0, circle.texture);
@@ -98,26 +98,24 @@ namespace mrko900::gravity::graphics::gl {
                 
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-                //if (first) std::cout << "fu" << glGetError() << '\n';
 #undef circle
-#undef circlePlainColor
             } else if (entry.second.type == RECTANGLE) {
-#define circle entry.second.def.rectangleDef
-#define circlePlainColor ((PlainColor*) circle.origin->appearance.ptr)
-                glUniform1f(0, circle.xHalf);
-                glUniform1f(1, circle.yHalf);
-                glUniform2f(2, circle.x, circle.y);
-                if (circle.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
-                    glUniform1ui(3, 1);
-                    glUniform4f(4, circlePlainColor->r, circlePlainColor->g, circlePlainColor->b, circlePlainColor->a);
+                glUseProgramStages(m_ProgramPipeline, GL_VERTEX_SHADER_BIT, m_RectVertexShaderProgram);
+                glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_SimpleFragmentShaderProgram);
+#define rect entry.second.def.rectangleDef
+#define rectPlainColor (rect.origin->appearance.plainColor())
+                if (rect.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
+                    glProgramUniform1ui(m_SimpleFragmentShaderProgram, 3, 1);
+                    glProgramUniform4f(m_SimpleFragmentShaderProgram, 4, rectPlainColor.r, 
+                                       rectPlainColor.g, rectPlainColor.b, rectPlainColor.a);
                 } else {
-                    glUniform1ui(3, 2);
-                    glBindTextureUnit(0, circle.texture);
+                    glProgramUniform1ui(m_SimpleFragmentShaderProgram, 3, 2);
+                    glBindTextureUnit(0, rect.texture);
                 }
-                glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
+                glBindVertexBuffer(0, rect.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
-#undef circlePlainColor
+#undef rectPlainColor
             }
         }
 
