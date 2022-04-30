@@ -40,6 +40,8 @@ namespace mrko900::gravity::app {
         mrko900::gravity::graphics::PlainColor* m_MenuColor;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimBeginTime;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimPauseBeginTime;
+        float m_MenuAnimCompletion;
+        float timeaccum = 0.0f;
 
         std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_Buttons;
 
@@ -48,6 +50,8 @@ namespace mrko900::gravity::app {
         };
 
         float m_MenuAnimBeginX;
+        float m_MenuButtonAnimBeginX;
+        float m_PlayButtonAnimBeginX;
         MenuState m_MenuState;
         std::function<float(float time)> m_MenuAnimDisplacementFunc;
 
