@@ -34,8 +34,8 @@ namespace mrko900::gravity::app {
         m_PlayButton(nullptr), m_MenuState(MenuState::CLOSED), m_MenuAnimBeginX(0.0f),
         m_MenuAnimDisplacementFunc([] (float t) -> float {
             return t <= 1.0f 
-                   ? (2.0f / 3.0f * t * t * (3.0f - 2.0f * t)) 
-                   : (2.0f / 3.0f * (t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 2.0f / 3.0f);
+                   ? (t * t * (3.0f - 2.0f * t)) 
+                   : ((t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 1);
         }), m_MenuAnimBeginTime(time_point<std::chrono::high_resolution_clock>()),
         m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()) {
     }
@@ -111,12 +111,6 @@ namespace mrko900::gravity::app {
 
     void ProgramLoop::run() {
         if (m_ViewportUpdateRequested) {
-            if (!m_ViewportInitializationRequested) {
-                m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
-            } else {
-                m_ViewportInitializationRequested = false;
-            }
-
             m_PlayButton->x = weightX(1.0f - weightY(0.1f));
             m_PlayButton->y = weightY(-0.9f);
             m_PlayButton->radius = weightY(0.08f);
@@ -127,8 +121,14 @@ namespace mrko900::gravity::app {
 
             m_Menu->width = weightX(0.5f);
             m_Menu->height = weightY(2.0f);
-            m_Menu->x = weightX(1.0f) + m_Menu->width / 2 - m_Menu->x;
-            m_Menu->y = weightY(0.0f);
+
+            if (!m_ViewportInitializationRequested) {
+                m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
+            } else {
+                m_ViewportInitializationRequested = false;
+                m_Menu->x = weightX(1.0f) + m_Menu->width / 2 - m_Menu->x + m_MenuAnimBeginX;
+                m_Menu->y = weightY(0.0f);
+            }
 
             m_Renderer.refreshFigure(0);
             m_Renderer.refreshFigure(1);
@@ -150,7 +150,7 @@ namespace mrko900::gravity::app {
                 m_MenuState = MenuState::CLOSED;
             }
 
-            m_Menu->x = m_MenuAnimBeginX - m_MenuAnimDisplacementFunc(normalizedTimeDiff);
+            m_Menu->x = m_MenuAnimBeginX - m_Menu->width * m_MenuAnimDisplacementFunc(normalizedTimeDiff);
             m_Renderer.refreshFigure(2);
         }
 
