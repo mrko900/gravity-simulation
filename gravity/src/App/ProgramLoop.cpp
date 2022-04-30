@@ -2,6 +2,7 @@
 #include <iostream>
 #include "../GL/GLMacros.h"
 #include "../Graphics/Texture.h"
+#include <chrono>
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS m_GLHelper
@@ -15,6 +16,12 @@ using mrko900::gravity::graphics::Appearance;
 
 using namespace mrko900::gravity::graphics; // todo remove
 
+using std::chrono::time_point;
+using std::chrono::duration;
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::microseconds;
+
 using enum mrko900::gravity::app::UserInput;
 using enum mrko900::gravity::app::KeyboardInputData;
 
@@ -24,12 +31,13 @@ namespace mrko900::gravity::app {
                              unsigned short viewportWidth, unsigned short viewportHeight) : m_Renderer(renderer),
         m_CoordinateSystemHelper(coordinateSystemHelper), m_ViewportUpdateRequested(false),
         m_ViewportInitializationRequested(false), m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight), 
-        m_PlayButton(nullptr), m_MenuState(MenuState::CLOSED), m_MenuAnimTime(0.0f), m_MenuAnimBeginX(0.0f),
+        m_PlayButton(nullptr), m_MenuState(MenuState::CLOSED), m_MenuAnimBeginX(0.0f),
         m_AnimMenuDisplacementFunc([] (float t) -> float {
             return t <= 1.0f 
                    ? (2.0f / 3.0f * t * t * (3.0f - 2.0f * t)) 
                    : (2.0f / 3.0f * (t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 2.0f / 3.0f);
-        }) {
+        }), m_MenuAnimBeginTime(time_point<std::chrono::high_resolution_clock>()),
+        m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()) {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -64,7 +72,7 @@ namespace mrko900::gravity::app {
 
         m_Menu = new Rectangle {
             0.0f, 0.0f, 0.0f, 0.0f, 
-            Appearance { AppearanceType::PLAIN_COLOR, m_MenuColor = new PlainColor { 0.8f, 0.3f, 0.8f, 1.0f } }, 0
+            Appearance { AppearanceType::PLAIN_COLOR, m_MenuColor = new PlainColor { 0.8f, 0.3f, 0.8f, 1.0f } }, -1
         };
         m_Renderer.addRectangle(2, *m_Menu);
 
@@ -89,23 +97,25 @@ namespace mrko900::gravity::app {
                 if (m_MenuState == MenuState::CLOSED) {
                     m_MenuState = MenuState::OPENING;
                     m_MenuAnimBeginX = m_Menu->x;
-                    m_MenuAnimTime = 0.0f;
+                    m_MenuAnimBeginTime = high_resolution_clock::now();
                 }
-                else if (m_MenuState == MenuState::OPEN)
+                else if (m_MenuState == MenuState::OPEN) {
+                    m_MenuAnimBeginTime += (high_resolution_clock::now() - m_MenuAnimPauseBeginTime);
                     m_MenuState = MenuState::CLOSING;
+                }
             }
         });
 
-        m_ViewportUpdateRequested = true;
+        m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;
     }
 
     void ProgramLoop::run() {
         if (m_ViewportUpdateRequested) {
-            if (!m_ViewportInitializationRequested)
+            if (!m_ViewportInitializationRequested) {
                 m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
-            else
+            } else {
                 m_ViewportInitializationRequested = false;
-            m_ViewportUpdateRequested = false;
+            }
 
             m_PlayButton->x = weightX(1.0f - weightY(0.1f));
             m_PlayButton->y = weightY(-0.9f);
@@ -116,35 +126,44 @@ namespace mrko900::gravity::app {
             m_MenuButton->radius = weightY(0.08f);
 
             m_Menu->width = weightX(0.5f);
-            m_Menu->height = weightY(0.3f);
-            m_Menu->x = weightX(0.3f);
-            m_Menu->y = weightY(-0.5f);
+            m_Menu->height = weightY(2.0f);
+            m_Menu->x = weightX(1.0f) + m_Menu->width / 2 - m_Menu->x;
+            m_Menu->y = weightY(0.0f);
 
             m_Renderer.refreshFigure(0);
             m_Renderer.refreshFigure(1);
             m_Renderer.refreshFigure(2);
+
+            m_ViewportUpdateRequested = false;
         }
 
         if (m_MenuState == MenuState::OPENING) {
+            auto now = high_resolution_clock::now();
+            auto timeDiff = now - m_MenuAnimBeginTime;
+            long millisTimeDiff = duration_cast<microseconds>(timeDiff).count();
+            float normalizedTimeDiff = (float) millisTimeDiff / 1'000'000;
             float t;
-            if (m_MenuAnimTime >= 1.0f) {
+            if (normalizedTimeDiff >= 1.0f) {
                 m_MenuState = MenuState::OPEN;
-                t = m_MenuAnimTime = 1.0f;
+                t = normalizedTimeDiff = 1.0f;
                 std::cout << "menu open" << '\n';
+                m_MenuAnimPauseBeginTime = now;
             } else {
-                m_MenuAnimTime += 0.0001f;
-                t = m_MenuAnimTime;
+                t = normalizedTimeDiff;
             }
             m_Menu->x = m_MenuAnimBeginX - m_AnimMenuDisplacementFunc(t);
             m_Renderer.refreshFigure(2);
         } else if (m_MenuState == MenuState::CLOSING) {
-            if (m_MenuAnimTime >= 2.0f) {
+            auto now = std::chrono::high_resolution_clock::now();
+            auto timeDiff = now - m_MenuAnimBeginTime;
+            long millisTimeDiff = duration_cast<microseconds>(timeDiff).count();
+            float normalizedTimeDiff = (float) millisTimeDiff / 1'000'000;
+            if (normalizedTimeDiff >= 2.0f) {
                 m_MenuState = MenuState::CLOSED;
                 m_Menu->x = m_MenuAnimBeginX;
                 std::cout << "menu closed" << '\n';
             } else {
-                m_MenuAnimTime += 0.0001f;
-                m_Menu->x = m_MenuAnimBeginX - m_AnimMenuDisplacementFunc(m_MenuAnimTime);
+                m_Menu->x = m_MenuAnimBeginX - m_AnimMenuDisplacementFunc(normalizedTimeDiff);
             }
             m_Renderer.refreshFigure(2);
         }

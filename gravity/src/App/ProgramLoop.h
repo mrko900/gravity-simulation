@@ -6,6 +6,7 @@
 #include "CoordinateSystemHelper.h"
 #include <functional>
 #include <vector>
+#include <chrono>
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -37,6 +38,8 @@ namespace mrko900::gravity::app {
         mrko900::gravity::graphics::PlainColor* m_MenuButtonColor;
         mrko900::gravity::graphics::Rectangle* m_Menu;
         mrko900::gravity::graphics::PlainColor* m_MenuColor;
+        std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimBeginTime;
+        std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimPauseBeginTime;
 
         std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_Buttons;
 
@@ -44,7 +47,6 @@ namespace mrko900::gravity::app {
             CLOSED, OPENING, OPEN, CLOSING
         };
 
-        float m_MenuAnimTime;
         float m_MenuAnimBeginX;
         MenuState m_MenuState;
         std::function<float(float time)> m_AnimMenuDisplacementFunc;
