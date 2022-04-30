@@ -47,19 +47,19 @@ namespace mrko900::gravity::app {
     void ProgramLoop::init() {
         m_PlayButtonColor = new PlainColor { 0.3f, 0.5f, 0.3f, 1.0f };
         m_PlayButton = new Circle { 
-            0.0f, 0.0f, 0.0f, Appearance { AppearanceType::PLAIN_COLOR, m_PlayButtonColor }, 0
+            0.0f, 0.0f, 0.0f, Appearance { AppearanceType::PLAIN_COLOR, m_PlayButtonColor }, 2
         };
         m_Renderer.addCircle(0, *m_PlayButton);
 
         m_MenuButtonColor = new PlainColor { 0.8f, 0.1f, 0.35f, 1.0f };
         m_MenuButton = new Circle {
-            0.0f, 0.0f, 0.0f, Appearance { AppearanceType::PLAIN_COLOR, m_MenuButtonColor }, 0
+            0.0f, 0.0f, 0.0f, Appearance { AppearanceType::PLAIN_COLOR, m_MenuButtonColor }, -1
         };
         m_Renderer.addCircle(1, *m_MenuButton);
 
         m_Menu = new Rectangle {
-            0.0f, 0.0f, 1.0f, 1.0f, 
-            Appearance { AppearanceType::PLAIN_COLOR, m_MenuColor = new PlainColor { 0.8f, 0.3f, 0.8f, 1.0f } }, 0
+            0.0f, 0.0f, 0.0f, 0.0f, 
+            Appearance { AppearanceType::PLAIN_COLOR, m_MenuColor = new PlainColor { 0.8f, 0.3f, 0.8f, 1.0f } }, 1
         };
         m_Renderer.addRectangle(2, *m_Menu);
 
@@ -116,6 +116,11 @@ namespace mrko900::gravity::app {
                 m_MenuButton->x = weightX(1.0f - weightY(0.1f));
                 m_MenuButton->y = weightY(0.9f);
                 m_MenuButton->radius = weightY(0.08f);
+            }
+
+            if (m_Menu != nullptr) {
+                m_Menu->width = weightX(2.0f);
+                m_Menu->height = weightY(1.9f);
             }
 
             m_Renderer.refreshFigure(0);

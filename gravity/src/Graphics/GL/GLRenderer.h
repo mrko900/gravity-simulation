@@ -4,6 +4,7 @@
 #include "../../GL/GLHelper.h"
 #include <string>
 #include <unordered_map>
+#include <set>
 #include "../../GL/GLTypes.h"
 
 namespace mrko900::gravity::graphics::gl {
@@ -54,12 +55,19 @@ namespace mrko900::gravity::graphics::gl {
             Def def;
         };
 
+        struct LayerCmp {
+            bool operator()(std::pair<unsigned int, int> a, std::pair<unsigned int, int> b) const {
+                return a.second < b.second;
+            }
+        };
+
         void refreshCircle(CircleDef& circle);
         void refreshRectangle(RectangleDef& rectangle);
 
         mrko900::gravity::gl::GLHelper& m_GLHelper;
         Shaders m_Shaders;
         std::unordered_map<unsigned int, Figure> m_Figures;
+        std::multiset<std::pair<unsigned int, int>, LayerCmp> m_Layers;
 
         float m_CoordXBegin;
         float m_CoordXEnd;

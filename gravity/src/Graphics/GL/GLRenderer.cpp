@@ -70,19 +70,18 @@ namespace mrko900::gravity::graphics::gl {
 
         std::cout << "gl error: " << glGetError() << '\n';
     }
-    static bool first = true;
+
     void GLRenderer::render() {
         float bgColor[] = { 0.5f, 0.3f, 0.7f, 1.0f };
         glClearBufferfv(GL_COLOR, 0, bgColor);
         
-        for (const auto& entry : m_Figures) {
-            unsigned int id = entry.first;
-
-            if (entry.second.type == CIRCLE) {
+        for (const auto& pair : m_Layers) {
+            const Figure& figure = m_Figures.at(pair.first);
+            if (figure.type == CIRCLE) {
                 glUseProgramStages(m_ProgramPipeline, GL_VERTEX_SHADER_BIT, m_RectVertexShaderProgram);
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_CircleFragmentShaderProgram);
 
-#define circle entry.second.def.circleDef
+#define circle figure.def.circleDef
 #define circlePlainColor (circle.origin->appearance.plainColor())
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 0, circle.xRadius);
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 1, circle.yRadius);
@@ -99,10 +98,10 @@ namespace mrko900::gravity::graphics::gl {
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
-            } else if (entry.second.type == RECTANGLE) {
+            } else if (figure.type == RECTANGLE) {
                 glUseProgramStages(m_ProgramPipeline, GL_VERTEX_SHADER_BIT, m_RectVertexShaderProgram);
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_SimpleFragmentShaderProgram);
-#define rect entry.second.def.rectangleDef
+#define rect figure.def.rectangleDef
 #define rectPlainColor (rect.origin->appearance.plainColor())
                 if (rect.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
                     glProgramUniform1ui(m_SimpleFragmentShaderProgram, 3, 1);
@@ -118,8 +117,6 @@ namespace mrko900::gravity::graphics::gl {
 #undef rectPlainColor
             }
         }
-
-        first = false;
     }
 
     void GLRenderer::addCircle(unsigned int id, Circle& circle) {
@@ -161,7 +158,8 @@ namespace mrko900::gravity::graphics::gl {
 
         Figure figure = Figure(CIRCLE, Def());
         figure.def.circleDef = CircleDef { x, y, xRadius, yRadius, &circle, buf, texture };
-        m_Figures.insert(std::make_pair(id, figure));
+        m_Figures.insert({ id, figure });
+        m_Layers.insert({ id, circle.layer });
     }
 
     void GLRenderer::addRectangle(unsigned int id, Rectangle& rectangle) {
@@ -203,7 +201,8 @@ namespace mrko900::gravity::graphics::gl {
 
         Figure figure = Figure(RECTANGLE, Def());
         figure.def.rectangleDef = RectangleDef { x, y, xHalf, yHalf, &rectangle, buf, texture };
-        m_Figures.insert(std::make_pair(id, figure));
+        m_Figures.insert({ id, figure });
+        m_Layers.insert({ id, rectangle.layer });
     }
 
     void GLRenderer::removeFigure(unsigned int id) {
@@ -212,8 +211,12 @@ namespace mrko900::gravity::graphics::gl {
             case CIRCLE:
                 glDeleteBuffers(1, &figure.def.circleDef.buffer);
                 break;
+            case RECTANGLE:
+                glDeleteBuffers(1, &figure.def.rectangleDef.buffer);
+                break;
         }
         m_Figures.erase(id);
+        // id erased from m_Layers the next draw
     }
 
     void GLRenderer::refreshFigure(unsigned int id) {
@@ -241,6 +244,18 @@ namespace mrko900::gravity::graphics::gl {
     }
 
     void GLRenderer::refreshRectangle(RectangleDef& rectangle) {
+        rectangle.x = (rectangle.origin->x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
+        rectangle.y = (rectangle.origin->y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
+        rectangle.xHalf = rectangle.origin->width / (m_CoordXEnd - m_CoordXBegin);
+        rectangle.yHalf = rectangle.origin->height / (m_CoordYEnd - m_CoordYBegin);
+        GLfloat positions[] {
+            rectangle.x - rectangle.xHalf, rectangle.y - rectangle.yHalf,
+            rectangle.x - rectangle.xHalf, rectangle.y + rectangle.yHalf,
+            rectangle.x + rectangle.xHalf, rectangle.y - rectangle.yHalf,
+            rectangle.x + rectangle.xHalf, rectangle.y + rectangle.yHalf
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, rectangle.buffer);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, 8 * sizeof(GLfloat), positions);
     }
 
     void GLRenderer::viewport(unsigned short viewportWidth, unsigned short viewportHeight) {
