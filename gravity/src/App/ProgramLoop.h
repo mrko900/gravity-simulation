@@ -27,15 +27,28 @@ namespace mrko900::gravity::app {
         bool m_ViewportInitializationRequested;
         unsigned short m_ViewportWidth;
         unsigned short m_ViewportHeight;
+
         mrko900::gravity::graphics::Renderer& m_Renderer;
         CoordinateSystemHelper& m_CoordinateSystemHelper;
+
         mrko900::gravity::graphics::Circle* m_PlayButton;
         mrko900::gravity::graphics::PlainColor* m_PlayButtonColor;
         mrko900::gravity::graphics::Circle* m_MenuButton;
         mrko900::gravity::graphics::PlainColor* m_MenuButtonColor;
         mrko900::gravity::graphics::Rectangle* m_Menu;
         mrko900::gravity::graphics::PlainColor* m_MenuColor;
-        std::vector<std::function<void (unsigned short clickX, unsigned short clickY)>> m_Buttons;
+
+        std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_Buttons;
+
+        enum class MenuState {
+            CLOSED, OPENING, OPEN, CLOSING
+        };
+
+        float m_MenuAnimTime;
+        float m_MenuAnimBeginX;
+        MenuState m_MenuState;
+        std::function<float(float time)> m_AnimMenuDisplacementFunc;
+
         bool testCircleClick(unsigned short clickX, unsigned short clickY,
                              const mrko900::gravity::graphics::Circle* circle);
     };
