@@ -49,7 +49,7 @@ namespace mrko900::gravity::app {
 
         float m_MenuAnimBeginX;
         MenuState m_MenuState;
-        std::function<float(float time)> m_AnimMenuDisplacementFunc;
+        std::function<float(float time)> m_MenuAnimDisplacementFunc;
 
         bool testCircleClick(unsigned short clickX, unsigned short clickY,
                              const mrko900::gravity::graphics::Circle* circle);

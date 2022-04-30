@@ -32,7 +32,7 @@ namespace mrko900::gravity::app {
         m_CoordinateSystemHelper(coordinateSystemHelper), m_ViewportUpdateRequested(false),
         m_ViewportInitializationRequested(false), m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight), 
         m_PlayButton(nullptr), m_MenuState(MenuState::CLOSED), m_MenuAnimBeginX(0.0f),
-        m_AnimMenuDisplacementFunc([] (float t) -> float {
+        m_MenuAnimDisplacementFunc([] (float t) -> float {
             return t <= 1.0f 
                    ? (2.0f / 3.0f * t * t * (3.0f - 2.0f * t)) 
                    : (2.0f / 3.0f * (t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 2.0f / 3.0f);
@@ -137,34 +137,20 @@ namespace mrko900::gravity::app {
             m_ViewportUpdateRequested = false;
         }
 
-        if (m_MenuState == MenuState::OPENING) {
-            auto now = high_resolution_clock::now();
-            auto timeDiff = now - m_MenuAnimBeginTime;
-            long millisTimeDiff = duration_cast<microseconds>(timeDiff).count();
-            float normalizedTimeDiff = (float) millisTimeDiff / 1'000'000;
-            float t;
-            if (normalizedTimeDiff >= 1.0f) {
-                m_MenuState = MenuState::OPEN;
-                t = normalizedTimeDiff = 1.0f;
-                std::cout << "menu open" << '\n';
-                m_MenuAnimPauseBeginTime = now;
-            } else {
-                t = normalizedTimeDiff;
-            }
-            m_Menu->x = m_MenuAnimBeginX - m_AnimMenuDisplacementFunc(t);
-            m_Renderer.refreshFigure(2);
-        } else if (m_MenuState == MenuState::CLOSING) {
+        if (m_MenuState == MenuState::OPENING || m_MenuState == MenuState::CLOSING) {
             auto now = std::chrono::high_resolution_clock::now();
             auto timeDiff = now - m_MenuAnimBeginTime;
             long millisTimeDiff = duration_cast<microseconds>(timeDiff).count();
             float normalizedTimeDiff = (float) millisTimeDiff / 1'000'000;
-            if (normalizedTimeDiff >= 2.0f) {
+
+            if (m_MenuState == MenuState::OPENING && normalizedTimeDiff >= 1.0f) {
+                m_MenuState = MenuState::OPEN;
+                m_MenuAnimPauseBeginTime = now;
+            } else if (normalizedTimeDiff >= 2.0f) {
                 m_MenuState = MenuState::CLOSED;
-                m_Menu->x = m_MenuAnimBeginX;
-                std::cout << "menu closed" << '\n';
-            } else {
-                m_Menu->x = m_MenuAnimBeginX - m_AnimMenuDisplacementFunc(normalizedTimeDiff);
             }
+
+            m_Menu->x = m_MenuAnimBeginX - m_MenuAnimDisplacementFunc(normalizedTimeDiff);
             m_Renderer.refreshFigure(2);
         }
 
