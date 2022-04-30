@@ -49,6 +49,23 @@ namespace mrko900::gravity::app {
             CLOSED, OPENING, OPEN, CLOSING
         };
 
+        struct MenuLayout {
+            mrko900::gravity::graphics::Rectangle rect0;
+            mrko900::gravity::graphics::PlainColor rect0color;
+            float rect0animbeginx;
+            bool rect0state;
+            mrko900::gravity::graphics::Rectangle rect1;
+            mrko900::gravity::graphics::PlainColor rect1color;
+            float rect1animbeginx;
+            bool rect1state;
+            mrko900::gravity::graphics::Rectangle mass[8];
+            mrko900::gravity::graphics::PlainColor masscolors[8];
+            float massanimbeginx[8];
+            bool massstates[8];
+        };
+
+        MenuLayout m_MenuLayout;
+
         float m_MenuAnimBeginX;
         float m_MenuButtonAnimBeginX;
         float m_PlayButtonAnimBeginX;

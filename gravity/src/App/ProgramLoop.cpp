@@ -109,6 +109,21 @@ namespace mrko900::gravity::app {
             }
         });
 
+        m_MenuLayout.rect0color = PlainColor { 1.0f, 0.0f, 0.0f, 1.0f };
+        m_MenuLayout.rect0.appearance = Appearance { AppearanceType::PLAIN_COLOR, &m_MenuLayout.rect0color };
+        m_MenuLayout.rect0.layer = 0;
+
+        m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
+            if (m_MenuLayout.rect0state) {
+                m_MenuLayout.rect0color = PlainColor { 1.0f, 0.0f, 0.0f, 1.0f };
+            } else {
+                m_MenuLayout.rect0color = PlainColor { 0.0f, 1.0f, 0.0f, 1.0f };
+            }
+            m_MenuLayout.rect0state = !m_MenuLayout.rect0state;
+        });
+
+        m_Renderer.addRectangle(3, m_MenuLayout.rect0);
+
         m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;
     }
 
@@ -130,6 +145,13 @@ namespace mrko900::gravity::app {
             m_MenuButton->y = weightY(0.9f);
             m_MenuButton->radius = weightY(0.08f);
 
+            //m_MenuLayout.rect0animbeginx = m_MenuAnimBeginX + m_Menu->width - m_Menu->width / 5;
+            m_MenuLayout.rect0animbeginx = m_MenuAnimBeginX + m_Menu->width / 2 - weightY(0.2);
+            m_MenuLayout.rect0.x = m_MenuLayout.rect0animbeginx - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.rect0.y = weightY(0.8f);
+            m_MenuLayout.rect0.width = weightY(0.2f);
+            m_MenuLayout.rect0.height = weightY(0.2f);
+
             if (!m_ViewportInitializationRequested) {
                 m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
             } else {
@@ -139,6 +161,7 @@ namespace mrko900::gravity::app {
             m_Renderer.refreshFigure(0);
             m_Renderer.refreshFigure(1);
             m_Renderer.refreshFigure(2);
+            m_Renderer.refreshFigure(3);
 
             m_ViewportUpdateRequested = false;
         }
@@ -163,9 +186,12 @@ namespace mrko900::gravity::app {
             m_Menu->x = m_MenuAnimBeginX - dx;
             m_MenuButton->x = m_MenuButtonAnimBeginX - dx;
             m_PlayButton->x = m_PlayButtonAnimBeginX - dx;
+            m_MenuLayout.rect0.x = m_MenuLayout.rect0animbeginx - dx;
+
             m_Renderer.refreshFigure(0);
             m_Renderer.refreshFigure(1);
             m_Renderer.refreshFigure(2);
+            m_Renderer.refreshFigure(3);
 
             if (normalizedTimeDiff >= 2.0f)
                 m_MenuAnimCompletion = 0.0f;
@@ -200,4 +226,7 @@ namespace mrko900::gravity::app {
         float r = circle->radius;
         return x * x + y * y <= r * r;
     }
+
+    //bool ProgramLoop::testRectangleClick(unsigned short clickX, unsigned short clickY, const Rectangle* rectangle) {
+    //}
 }
