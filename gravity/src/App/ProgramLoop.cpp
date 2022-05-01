@@ -94,7 +94,7 @@ namespace mrko900::gravity::app {
         appearance->getFillColor().g = 0.0f;
         appearance->getFillColor().b = 0.0f;
         appearance->getFillColor().a = 1.0f;
-        m_Buttons.push_back([this, &rect, onClickCallback, statePtr]
+        m_LeftClickables.push_back([this, &rect, onClickCallback, statePtr]
                             (unsigned short clickX, unsigned short clickY) {
             if (testRectangleClick(clickX, clickY, rect)) {
                 rect.appearance->getFillColor() = *statePtr
@@ -135,7 +135,7 @@ namespace mrko900::gravity::app {
         };
         m_Renderer.addRectangle(2, *m_Menu);
 
-        m_Buttons.push_back([this](unsigned short clickX, unsigned short clickY) {
+        m_LeftClickables.push_back([this](unsigned short clickX, unsigned short clickY) {
             if (testCircleClick(clickX, clickY, *m_PlayButton)) {
                 m_PlayButton->appearance->getFillColor().g += 0.1f;
                 m_PlayButton->appearance->getFillColor().r -= 0.03f;
@@ -150,7 +150,7 @@ namespace mrko900::gravity::app {
             }
         });
 
-        m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
+        m_LeftClickables.push_back([this] (unsigned short clickX, unsigned short clickY) {
             if (testCircleClick(clickX, clickY, *m_MenuButton)) {
                 if (m_MenuState == MenuState::CLOSED) {
                     m_MenuState = MenuState::OPENING;
@@ -165,25 +165,39 @@ namespace mrko900::gravity::app {
         });
         
         // object spawning
-        m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
+        m_LeftClickables.push_back([this] (unsigned short clickX, unsigned short clickY) {
             if (m_CanSpawnObj && !testRectangleClick(clickX, clickY, *m_Menu)) {
-                static unsigned int idd = 10;
+                static unsigned int idd = 10; // todo
                 float x = weightX(2.0f * (float) clickX / (float) m_ViewportWidth - 1.0f);
                 float y = weightY(2.0f * (float) clickY / (float) m_ViewportHeight - 1.0f);
                 AppearanceAttribute attributes[] { FILL_COLOR };
-                bool revalidate = m_Objects.capacity() == m_Objects.size();
-                m_Objects.emplace_back(Object {
-                    idd, AppearanceImpl(attributes, 1), Circle { x, y, weightY(0.375f), nullptr, -2 }, true
-                });
+                bool revalidate = m_Objects.bucket_count() * m_Objects.max_load_factor() == m_Objects.size();
+                m_Objects.insert({ idd, Object {
+                    AppearanceImpl(attributes, 1), Circle { x, y, weightY(0.375f), nullptr, -2 }, false
+                } });
+                unsigned int myId = idd;
                 if (revalidate) {
-                    for (int i = 0; i < m_Objects.size() - 1; ++i) {
-                        m_Renderer.replaceCircle(m_Objects[i].id, m_Objects[i].circle);
-                        m_Objects[i].circle.appearance = &m_Objects[i].appearance;
+                    int i = 0;
+                    for (auto& entry : m_Objects) {
+                        if (entry.first == myId)
+                            continue;
+                        m_Renderer.replaceCircle(entry.first, entry.second.circle);
+                        entry.second.circle.appearance = &entry.second.appearance;
+                        ++i;
                     }
                 }
-                m_Objects.back().appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
-                m_Objects.back().circle.appearance = &m_Objects.back().appearance;
-                m_Renderer.addCircle(idd, m_Objects.back().circle);
+                Object& me = m_Objects.at(myId);
+                me.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
+                me.circle.appearance = &me.appearance;
+                m_Renderer.addCircle(idd, me.circle);
+                m_MiddleClickables.push_back([this, &me, myId](unsigned short clickX, unsigned short clickY) {
+                    std::cout << "middle click, wow" << '\n';
+                    if (testCircleClick(clickX, clickY, me.circle)) {
+                        m_Renderer.removeFigure(myId);
+                        m_Objects.erase(myId);
+                        // todo remove self from m_MiddleClickables
+                    }
+                });
                 ++idd;
             } else
                 m_CanSpawnObj = true;
@@ -285,6 +299,9 @@ namespace mrko900::gravity::app {
             for (int id = 0; id <= 9; ++id)
                 refresh.insert(id);
 
+            for (const auto& entry : m_Objects)
+                refresh.insert(entry.first);
+
             m_ViewportUpdateRequested = false;
         }
 
@@ -325,11 +342,11 @@ namespace mrko900::gravity::app {
                 m_MenuAnimCompletion = displacement;
         }
 
-        for (Object& obj : m_Objects) {
-            //if (obj.refresh) {
-            //    refresh.insert(obj.id);
-            //    //obj.refresh = false;
-            //}
+        for (auto& entry : m_Objects) {
+            if (entry.second.refresh) {
+                refresh.insert(entry.first);
+                entry.second.refresh = false;
+            }
         }
 
         for (unsigned int id : refresh)
@@ -347,7 +364,21 @@ namespace mrko900::gravity::app {
     void ProgramLoop::userInput(UserInput input, void* data) {
         if (input == MOUSE_PRESSED) {
             MouseClickInputData mouseClick = *((MouseClickInputData*) data);
-            for (auto& button : m_Buttons)
+            const std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>>* clickables;
+            switch (mouseClick.button) {
+                case MouseButton::LEFT:
+                    clickables = &m_LeftClickables;
+                    break;
+                case MouseButton::RIGHT:
+                    clickables = &m_RightClickables;
+                    break;
+                case MouseButton::MIDDLE:
+                    clickables = &m_MiddleClickables;
+                    break;
+                default:
+                    throw std::invalid_argument("unsupported mouse button type");
+            }
+            for (auto& button : *clickables)
                 button(mouseClick.x, mouseClick.y);
         }
     }

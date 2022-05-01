@@ -380,18 +380,30 @@ namespace mrko900::gravity::app::win {
         onWmKey(hWnd, wParam, KEY_RELEASED);
     }
 
-    void WinProgram::onWmLButtonDown(HWND hWnd, LPARAM lParam) {
+    void WinProgram::onWmMouseButtonDown(HWND hWnd, LPARAM lParam, MouseButton mouseButton) {
         WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
         if (!obj.m_ProgramLoopRunning)
             return;
         RECT clientRect;
         GetClientRect(hWnd, &clientRect);
         MouseClickInputData data = MouseClickInputData(
-            LOWORD(lParam), 
+            LOWORD(lParam),
             clientRect.bottom - HIWORD(lParam),
-            MouseButton::LEFT
+            mouseButton
         );
         obj.m_ProgramLoop->userInput(MOUSE_PRESSED, &data);
+    }
+
+    void WinProgram::onWmLButtonDown(HWND hWnd, LPARAM lParam) {
+        onWmMouseButtonDown(hWnd, lParam, MouseButton::LEFT);
+    }
+
+    void WinProgram::onWmRButtonDown(HWND hWnd, LPARAM lParam) {
+        onWmMouseButtonDown(hWnd, lParam, MouseButton::RIGHT);
+    }
+
+    void WinProgram::onWmMButtonDown(HWND hWnd, LPARAM lParam) {
+        onWmMouseButtonDown(hWnd, lParam, MouseButton::MIDDLE);
     }
 
     LRESULT WinProgram::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -415,6 +427,12 @@ namespace mrko900::gravity::app::win {
                 break;
             case WM_LBUTTONDOWN:
                 onWmLButtonDown(hWnd, lParam);
+                break;
+            case WM_RBUTTONDOWN:
+                onWmRButtonDown(hWnd, lParam);
+                break;
+            case WM_MBUTTONDOWN:
+                onWmMButtonDown(hWnd, lParam);
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);

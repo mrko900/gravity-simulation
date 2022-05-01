@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <set>
+#include <unordered_set>
 #include "../../GL/GLTypes.h"
 
 namespace mrko900::gravity::graphics::gl {
@@ -70,6 +71,7 @@ namespace mrko900::gravity::graphics::gl {
         Shaders m_Shaders;
         std::unordered_map<unsigned int, Figure> m_Figures;
         std::multiset<std::pair<unsigned int, int>, LayerCmp> m_Layers;
+        std::unordered_set<unsigned int> m_RemovedIDs;
 
         float m_CoordXBegin;
         float m_CoordXEnd;

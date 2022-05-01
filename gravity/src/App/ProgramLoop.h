@@ -49,7 +49,10 @@ namespace mrko900::gravity::app {
                                                                std::function<void(bool)> onClickCallback);
 
         bool m_CanSpawnObj;
-        std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_Buttons;
+
+        std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_LeftClickables;
+        std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_RightClickables;
+        std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_MiddleClickables;
 
         enum class MenuState {
             CLOSED, OPENING, OPEN, CLOSING
@@ -95,19 +98,12 @@ namespace mrko900::gravity::app {
         std::function<float(float time)> m_MenuAnimDisplacementFunc;
 
         struct Object {
-            unsigned int id;
             mrko900::gravity::graphics::AppearanceImpl appearance;
             mrko900::gravity::graphics::Circle circle;
             bool refresh;
         };
 
-        std::vector<Object> m_Objects;
-
-        struct Thingy {
-            int a;
-            int* ptr;
-        };
-        std::vector<Object> moo;
+        std::unordered_map<unsigned int, Object> m_Objects;
 
         bool testCircleClick(unsigned short clickX, unsigned short clickY,
                              const mrko900::gravity::graphics::Circle& circle);
@@ -115,4 +111,3 @@ namespace mrko900::gravity::app {
                                 const mrko900::gravity::graphics::Rectangle& rectangle);
     };
 }
-

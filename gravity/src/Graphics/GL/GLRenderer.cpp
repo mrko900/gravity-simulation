@@ -76,8 +76,14 @@ namespace mrko900::gravity::graphics::gl {
         float bgColor[] = { 0.5f, 0.3f, 0.7f, 1.0f };
         glClearBufferfv(GL_COLOR, 0, bgColor);
 
-        for (const auto& pair : m_Layers) {
-            const Figure& figure = m_Figures.at(pair.first);
+        auto iterator = m_Layers.begin();
+        while (iterator != m_Layers.end()) {
+            if (m_RemovedIDs.contains(iterator->first)) {
+                iterator = m_Layers.erase(iterator);
+                break;
+            }
+
+            const Figure& figure = m_Figures.at(iterator->first);
             if (figure.type == CIRCLE) {
                 glUseProgramStages(m_ProgramPipeline, GL_VERTEX_SHADER_BIT, m_RectVertexShaderProgram);
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_CircleFragmentShaderProgram);
@@ -117,7 +123,10 @@ namespace mrko900::gravity::graphics::gl {
 #undef circle
 #undef rectFillColor
             }
+            ++iterator;
         }
+        
+        m_RemovedIDs.clear();
     }
 
     void GLRenderer::addCircle(unsigned int id, Circle& circle) {
@@ -225,7 +234,7 @@ namespace mrko900::gravity::graphics::gl {
                 break;
         }
         m_Figures.erase(id);
-        // todo id erase from m_Layers the next draw
+        m_RemovedIDs.insert(id);
     }
 
     void GLRenderer::refreshFigure(unsigned int id) {
