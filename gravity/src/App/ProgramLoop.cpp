@@ -190,14 +190,6 @@ namespace mrko900::gravity::app {
                 me.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                 me.circle.appearance = &me.appearance;
                 m_Renderer.addCircle(idd, me.circle);
-                m_MiddleClickables.push_back([this, &me, myId](unsigned short clickX, unsigned short clickY) {
-                    std::cout << "middle click, wow" << '\n';
-                    if (testCircleClick(clickX, clickY, me.circle)) {
-                        m_Renderer.removeFigure(myId);
-                        m_Objects.erase(myId);
-                        // todo remove self from m_MiddleClickables
-                    }
-                });
                 ++idd;
             } else
                 m_CanSpawnObj = true;
@@ -224,6 +216,26 @@ namespace mrko900::gravity::app {
         m_MenuLayout.gInputState = false;
         m_MenuLayout.gInputAppearance = initButton(9, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
             std::function<void(bool)> ([](bool) {}));
+
+        m_MiddleClickables.push_back([this](unsigned short clickX, unsigned short clickY) {
+            auto it = m_Objects.begin();
+            while (it != m_Objects.end()) {
+                bool erase;
+                if (m_CanSpawnObj 
+                    && !testRectangleClick(clickX, clickY, *m_Menu)
+                    && testCircleClick(clickX, clickY, it->second.circle)) {
+                    m_Renderer.removeFigure(it->first);
+                    erase = true;
+                } else {
+                    erase = false;
+                }
+                if (erase) {
+                    it = m_Objects.erase(it);
+                }
+                else
+                    ++it;
+            }
+        });
 
         m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;
     }

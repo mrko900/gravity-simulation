@@ -80,7 +80,7 @@ namespace mrko900::gravity::graphics::gl {
         while (iterator != m_Layers.end()) {
             if (m_RemovedIDs.contains(iterator->first)) {
                 iterator = m_Layers.erase(iterator);
-                break;
+                continue;
             }
 
             const Figure& figure = m_Figures.at(iterator->first);
