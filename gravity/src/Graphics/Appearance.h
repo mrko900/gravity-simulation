@@ -13,9 +13,14 @@ namespace mrko900::gravity::graphics {
         float r, g, b, a;
     };
 
+    enum class OutlineMode {
+        INNER, OUTER
+    };
+
     struct Outline {
         RGBAColor color;
         float width;
+        OutlineMode mode;
     };
 
     class Appearance {

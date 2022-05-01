@@ -23,7 +23,9 @@ namespace mrko900::gravity::graphics {
     public:
         virtual ~Renderer();
         virtual void addCircle(unsigned int id, Circle& circle) = 0;
+        virtual void replaceCircle(unsigned int id, Circle& circle) = 0;
         virtual void addRectangle(unsigned int id, Rectangle& rectangle) = 0;
+        virtual void replaceRectangle(unsigned int id, Rectangle& rectangle) = 0;
         virtual void removeFigure(unsigned int id) = 0;
         virtual void refreshFigure(unsigned int id) = 0;
         virtual void render() = 0;

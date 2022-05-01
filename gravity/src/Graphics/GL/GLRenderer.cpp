@@ -95,7 +95,6 @@ namespace mrko900::gravity::graphics::gl {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 2);
                     glBindTextureUnit(0, circle.texture);
                 }
-
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
@@ -164,6 +163,10 @@ namespace mrko900::gravity::graphics::gl {
         m_Layers.insert({ id, circle.layer });
     }
 
+    void GLRenderer::replaceCircle(unsigned int id, Circle& circle) {
+        m_Figures[id].def.circleDef.origin = &circle;
+    }
+
     void GLRenderer::addRectangle(unsigned int id, Rectangle& rectangle) {
         float x = (rectangle.x - m_CoordXBegin) / (m_CoordXEnd - m_CoordXBegin) * 2 - 1;
         float y = (rectangle.y - m_CoordYBegin) / (m_CoordYEnd - m_CoordYBegin) * 2 - 1;
@@ -207,6 +210,10 @@ namespace mrko900::gravity::graphics::gl {
         m_Layers.insert({ id, rectangle.layer });
     }
 
+    void GLRenderer::replaceRectangle(unsigned int id, Rectangle& rectangle) {
+        m_Figures[id].def.rectangleDef.origin = &rectangle;
+    }
+
     void GLRenderer::removeFigure(unsigned int id) {
         Figure& figure = m_Figures[id];
         switch (figure.type) {
@@ -218,10 +225,12 @@ namespace mrko900::gravity::graphics::gl {
                 break;
         }
         m_Figures.erase(id);
-        // id erased from m_Layers the next draw
+        // todo id erase from m_Layers the next draw
     }
 
     void GLRenderer::refreshFigure(unsigned int id) {
+        // todo refresh layer
+
         Figure& figure = m_Figures[id];
 
         if (figure.type == CIRCLE)

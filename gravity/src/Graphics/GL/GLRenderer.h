@@ -20,7 +20,9 @@ namespace mrko900::gravity::graphics::gl {
         void init();
         void render() override;
         void addCircle(unsigned int id, Circle& circle) override;
+        void replaceCircle(unsigned int id, Circle& circle) override;
         void addRectangle(unsigned int id, Rectangle& rectangle) override;
+        void replaceRectangle(unsigned int id, Rectangle& rectangle) override;
         void removeFigure(unsigned int id) override;
         void refreshFigure(unsigned int id) override;
         void viewport(unsigned short viewportWidth, unsigned short viewportHeight) override;

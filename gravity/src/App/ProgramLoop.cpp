@@ -5,6 +5,7 @@
 #include "../Graphics/Texture.h"
 #include <chrono>
 #include <stdexcept>
+#include <unordered_set>
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS m_GLHelper
@@ -77,6 +78,9 @@ namespace mrko900::gravity::app {
 
         if (m_MenuLayout.yvelInputAppearance != nullptr)
             delete m_MenuLayout.yvelInputAppearance;
+
+        if (m_MenuLayout.radiusInputAppearance != nullptr)
+            delete m_MenuLayout.radiusInputAppearance;
 
         if (m_MenuLayout.gInputAppearance != nullptr)
             delete m_MenuLayout.gInputAppearance;
@@ -159,11 +163,28 @@ namespace mrko900::gravity::app {
                 m_CanSpawnObj = false;
             }
         });
-
+        
         // object spawning
         m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
             if (m_CanSpawnObj && !testRectangleClick(clickX, clickY, *m_Menu)) {
-                // todo spawn an obj
+                static unsigned int idd = 10;
+                float x = weightX(2.0f * (float) clickX / (float) m_ViewportWidth - 1.0f);
+                float y = weightY(2.0f * (float) clickY / (float) m_ViewportHeight - 1.0f);
+                AppearanceAttribute attributes[] { FILL_COLOR };
+                bool revalidate = m_Objects.capacity() == m_Objects.size();
+                m_Objects.emplace_back(Object {
+                    idd, AppearanceImpl(attributes, 1), Circle { x, y, weightY(0.375f), nullptr, -2 }, true
+                });
+                if (revalidate) {
+                    for (int i = 0; i < m_Objects.size() - 1; ++i) {
+                        m_Renderer.replaceCircle(m_Objects[i].id, m_Objects[i].circle);
+                        m_Objects[i].circle.appearance = &m_Objects[i].appearance;
+                    }
+                }
+                m_Objects.back().appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
+                m_Objects.back().circle.appearance = &m_Objects.back().appearance;
+                m_Renderer.addCircle(idd, m_Objects.back().circle);
+                ++idd;
             } else
                 m_CanSpawnObj = true;
         });
@@ -183,14 +204,19 @@ namespace mrko900::gravity::app {
         m_MenuLayout.yvelInputState = false;
         m_MenuLayout.yvelInputAppearance = initButton(7, m_MenuLayout.yvelInput, &m_MenuLayout.yvelInputState,
             std::function<void(bool)> ([](bool) {}));
+        m_MenuLayout.radiusInputState = false;
+        m_MenuLayout.radiusInputAppearance = initButton(8, m_MenuLayout.radiusInput, &m_MenuLayout.radiusInputState,
+            std::function<void(bool)> ([](bool) {}));
         m_MenuLayout.gInputState = false;
-        m_MenuLayout.gInputAppearance = initButton(8, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
+        m_MenuLayout.gInputAppearance = initButton(9, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
             std::function<void(bool)> ([](bool) {}));
 
         m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;
     }
 
     void ProgramLoop::run() {
+        std::unordered_set<unsigned int> refresh;
+
         if (m_ViewportUpdateRequested) {
             m_Menu->width = weightX(0.5f);
             m_Menu->height = weightY(2.0f);
@@ -238,9 +264,15 @@ namespace mrko900::gravity::app {
             m_MenuLayout.yvelInput.width = weightY(0.2f);
             m_MenuLayout.yvelInput.height = weightY(0.2f);
 
+            m_MenuLayout.radiusInputAnimBeginX = m_MenuAnimBeginX;
+            m_MenuLayout.radiusInput.x = m_MenuLayout.radiusInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.radiusInput.y = weightY(-0.1f);
+            m_MenuLayout.radiusInput.width = m_Menu->width - weightY(0.2f);
+            m_MenuLayout.radiusInput.height = weightY(0.2f);
+
             m_MenuLayout.gInputAnimBeginX = m_MenuAnimBeginX;
             m_MenuLayout.gInput.x = m_MenuLayout.gInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
-            m_MenuLayout.gInput.y = weightY(-0.1f);
+            m_MenuLayout.gInput.y = weightY(-0.4f);
             m_MenuLayout.gInput.width = m_Menu->width - weightY(0.2f);
             m_MenuLayout.gInput.height = weightY(0.2f);
 
@@ -250,15 +282,8 @@ namespace mrko900::gravity::app {
                 m_ViewportInitializationRequested = false;
             }
 
-            m_Renderer.refreshFigure(0);
-            m_Renderer.refreshFigure(1);
-            m_Renderer.refreshFigure(2);
-            m_Renderer.refreshFigure(3);
-            m_Renderer.refreshFigure(4);
-            m_Renderer.refreshFigure(5);
-            m_Renderer.refreshFigure(6);
-            m_Renderer.refreshFigure(7);
-            m_Renderer.refreshFigure(8);
+            for (int id = 0; id <= 9; ++id)
+                refresh.insert(id);
 
             m_ViewportUpdateRequested = false;
         }
@@ -288,23 +313,27 @@ namespace mrko900::gravity::app {
             m_MenuLayout.massInput.x = m_MenuLayout.massInputAnimBeginX - dx;
             m_MenuLayout.xvelInput.x = m_MenuLayout.xvelInputAnimBeginX - dx;
             m_MenuLayout.yvelInput.x = m_MenuLayout.yvelInputAnimBeginX - dx;
+            m_MenuLayout.radiusInput.x = m_MenuLayout.radiusInputAnimBeginX - dx;
             m_MenuLayout.gInput.x = m_MenuLayout.gInputAnimBeginX - dx;
             
-            m_Renderer.refreshFigure(0);
-            m_Renderer.refreshFigure(1);
-            m_Renderer.refreshFigure(2);
-            m_Renderer.refreshFigure(3);
-            m_Renderer.refreshFigure(4);
-            m_Renderer.refreshFigure(5);
-            m_Renderer.refreshFigure(6);
-            m_Renderer.refreshFigure(7);
-            m_Renderer.refreshFigure(8);
+            for (int id = 0; id <= 9; ++id)
+                refresh.insert(id);
 
             if (normalizedTimeDiff >= 2.0f)
                 m_MenuAnimCompletion = 0.0f;
             else
                 m_MenuAnimCompletion = displacement;
         }
+
+        for (Object& obj : m_Objects) {
+            //if (obj.refresh) {
+            //    refresh.insert(obj.id);
+            //    //obj.refresh = false;
+            //}
+        }
+
+        for (unsigned int id : refresh)
+            m_Renderer.refreshFigure(id);
 
         m_Renderer.render();
     }
@@ -324,8 +353,8 @@ namespace mrko900::gravity::app {
     }
 
     bool ProgramLoop::testCircleClick(unsigned short clickX, unsigned short clickY, const Circle& circle) {
-        float normalizedX = (float) clickX / (float) m_ViewportWidth * 2 - 1;
-        float normalizedY = (float) clickY / (float) m_ViewportHeight * 2 - 1;
+        float normalizedX = (float) clickX / (float) m_ViewportWidth * 2.0f - 1.0f;
+        float normalizedY = (float) clickY / (float) m_ViewportHeight * 2.0f - 1.0f;
         float weightedX = weightX(normalizedX);
         float weightedY = weightY(normalizedY);
         float x = weightedX - circle.x;
@@ -335,12 +364,12 @@ namespace mrko900::gravity::app {
     }
 
     bool ProgramLoop::testRectangleClick(unsigned short clickX, unsigned short clickY, const Rectangle& rectangle) {
-        float normalizedX = (float) clickX / (float) m_ViewportWidth * 2 - 1;
-        float normalizedY = (float) clickY / (float) m_ViewportHeight * 2 - 1;
+        float normalizedX = (float) clickX / (float) m_ViewportWidth * 2.0f - 1.0f;
+        float normalizedY = (float) clickY / (float) m_ViewportHeight * 2.0f - 1.0f;
         float weightedX = weightX(normalizedX);
         float weightedY = weightY(normalizedY);
-        float halfWidth = rectangle.width / 2;
-        float halfHeight = rectangle.height / 2;
+        float halfWidth = rectangle.width / 2.0f;
+        float halfHeight = rectangle.height / 2.0f;
         return weightedX > rectangle.x - halfWidth
             && weightedX < rectangle.x + halfWidth
             && weightedY > rectangle.y - halfHeight

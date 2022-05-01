@@ -76,6 +76,10 @@ namespace mrko900::gravity::app {
             mrko900::gravity::graphics::AppearanceImpl* yvelInputAppearance;
             float yvelInputAnimBeginX;
             bool yvelInputState;
+            mrko900::gravity::graphics::Rectangle radiusInput;
+            mrko900::gravity::graphics::AppearanceImpl* radiusInputAppearance;
+            float radiusInputAnimBeginX;
+            bool radiusInputState;
             mrko900::gravity::graphics::Rectangle gInput;
             mrko900::gravity::graphics::AppearanceImpl* gInputAppearance;
             float gInputAnimBeginX;
@@ -89,6 +93,21 @@ namespace mrko900::gravity::app {
         float m_PlayButtonAnimBeginX;
         MenuState m_MenuState;
         std::function<float(float time)> m_MenuAnimDisplacementFunc;
+
+        struct Object {
+            unsigned int id;
+            mrko900::gravity::graphics::AppearanceImpl appearance;
+            mrko900::gravity::graphics::Circle circle;
+            bool refresh;
+        };
+
+        std::vector<Object> m_Objects;
+
+        struct Thingy {
+            int a;
+            int* ptr;
+        };
+        std::vector<Object> moo;
 
         bool testCircleClick(unsigned short clickX, unsigned short clickY,
                              const mrko900::gravity::graphics::Circle& circle);
