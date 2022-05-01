@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="src\App\CoordinateSystemHelper.cpp" />
     <ClCompile Include="src\App\ProgramLoop.cpp" />
+    <ClCompile Include="src\Graphics\Appearance.cpp" />
+    <ClCompile Include="src\Graphics\AppearanceImpl.cpp" />
     <ClCompile Include="src\Graphics\GL\GLTextureBuffer.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Physics\DynamicCoordinatesImpl.cpp" />
@@ -43,6 +45,8 @@
     <ClInclude Include="src\App\CoordinateSystemHelper.h" />
     <ClInclude Include="src\App\ProgramLoop.h" />
     <ClInclude Include="src\App\UserInput.h" />
+    <ClInclude Include="src\Graphics\Appearance.h" />
+    <ClInclude Include="src\Graphics\AppearanceImpl.h" />
     <ClInclude Include="src\Graphics\GL\GLTextureBuffer.h" />
     <ClInclude Include="src\Graphics\Texture.h" />
     <ClInclude Include="src\Physics\DynamicCoordinatesImpl.h" />

@@ -12,6 +12,7 @@ using mrko900::gravity::gl::GLHelper;
 using namespace mrko900::gravity::gl::types;
 
 using enum mrko900::gravity::graphics::FigureType;
+using enum mrko900::gravity::graphics::AppearanceAttribute;
 
 namespace mrko900::gravity::graphics::gl {
     GLRenderer::GLRenderer(GLHelper& glHelper, Shaders shaders) : m_GLHelper(glHelper), m_Shaders(std::move(shaders)),
@@ -74,7 +75,7 @@ namespace mrko900::gravity::graphics::gl {
     void GLRenderer::render() {
         float bgColor[] = { 0.5f, 0.3f, 0.7f, 1.0f };
         glClearBufferfv(GL_COLOR, 0, bgColor);
-        
+
         for (const auto& pair : m_Layers) {
             const Figure& figure = m_Figures.at(pair.first);
             if (figure.type == CIRCLE) {
@@ -82,39 +83,40 @@ namespace mrko900::gravity::graphics::gl {
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_CircleFragmentShaderProgram);
 
 #define circle figure.def.circleDef
-#define circlePlainColor (circle.origin->appearance.plainColor())
+#define circleFillColor circle.origin->appearance->getFillColor()
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 0, circle.xRadius);
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 1, circle.yRadius);
                 glProgramUniform2f(m_CircleFragmentShaderProgram, 2, circle.x, circle.y);
-                if (circle.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
+                if (circle.origin->appearance->hasAttribute(FILL_COLOR)) {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 1);
-                    glProgramUniform4f(m_CircleFragmentShaderProgram, 4, circlePlainColor.r, 
-                                       circlePlainColor.g, circlePlainColor.b, circlePlainColor.a);
-                } else {
+                    glProgramUniform4f(m_CircleFragmentShaderProgram, 4, circleFillColor.r, 
+                                       circleFillColor.g, circleFillColor.b, circleFillColor.a);
+                } else if (circle.origin->appearance->hasAttribute(TEXTURE)) {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 2);
                     glBindTextureUnit(0, circle.texture);
                 }
-                
+
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
+#undef circleFillColor
             } else if (figure.type == RECTANGLE) {
                 glUseProgramStages(m_ProgramPipeline, GL_VERTEX_SHADER_BIT, m_RectVertexShaderProgram);
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_SimpleFragmentShaderProgram);
 #define rect figure.def.rectangleDef
-#define rectPlainColor (rect.origin->appearance.plainColor())
-                if (rect.origin->appearance.type == AppearanceType::PLAIN_COLOR) {
+#define rectFillColor rect.origin->appearance->getFillColor()
+                if (rect.origin->appearance->hasAttribute(FILL_COLOR)) {
                     glProgramUniform1ui(m_SimpleFragmentShaderProgram, 3, 1);
-                    glProgramUniform4f(m_SimpleFragmentShaderProgram, 4, rectPlainColor.r, 
-                                       rectPlainColor.g, rectPlainColor.b, rectPlainColor.a);
-                } else {
+                    glProgramUniform4f(m_SimpleFragmentShaderProgram, 4, rectFillColor.r, 
+                                       rectFillColor.g, rectFillColor.b, rectFillColor.a);
+                } else if (rect.origin->appearance->hasAttribute(TEXTURE)) {
                     glProgramUniform1ui(m_SimpleFragmentShaderProgram, 3, 2);
                     glBindTextureUnit(0, rect.texture);
                 }
                 glBindVertexBuffer(0, rect.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
-#undef rectPlainColor
+#undef rectFillColor
             }
         }
     }
@@ -140,11 +142,11 @@ namespace mrko900::gravity::graphics::gl {
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
 
         GLuint texture;
-        if (circle.appearance.type == AppearanceType::TEXTURE) {
+        if (circle.appearance->hasAttribute(TEXTURE)) {
             glCreateTextures(GL_TEXTURE_2D, 1, &texture);
             glBindTexture(GL_TEXTURE_2D, texture);
             GLTextureBuffer textureBuffer(m_GLHelper);
-#define txt (*((Texture*) circle.appearance.ptr))
+#define txt circle.appearance->getTexture()
             for (unsigned int level = 0; level < txt.levels(); ++level) {
                 txt.writeLevel(level, textureBuffer);
                 if (m_AutoGenLOD && level == m_AutoGenLODAfter) {
@@ -183,11 +185,11 @@ namespace mrko900::gravity::graphics::gl {
         glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
 
         GLuint texture;
-        if (rectangle.appearance.type == AppearanceType::TEXTURE) {
+        if (rectangle.appearance->hasAttribute(TEXTURE)) {
             glCreateTextures(GL_TEXTURE_2D, 1, &texture);
             glBindTexture(GL_TEXTURE_2D, texture);
             GLTextureBuffer textureBuffer(m_GLHelper);
-#define txt (*((Texture*) rectangle.appearance.ptr))
+#define txt rectangle.appearance->getTexture()
             for (unsigned int level = 0; level < txt.levels(); ++level) {
                 txt.writeLevel(level, textureBuffer);
                 if (m_AutoGenLOD && level == m_AutoGenLODAfter) {

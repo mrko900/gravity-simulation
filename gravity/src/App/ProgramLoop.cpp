@@ -1,4 +1,5 @@
 #include "ProgramLoop.h"
+
 #include <iostream>
 #include "../GL/GLMacros.h"
 #include "../Graphics/Texture.h"
@@ -26,6 +27,7 @@ using std::chrono::nanoseconds;
 
 using enum mrko900::gravity::app::UserInput;
 using enum mrko900::gravity::app::KeyboardInputData;
+using enum mrko900::gravity::graphics::AppearanceAttribute;
 
 namespace mrko900::gravity::app {
     ProgramLoop::ProgramLoop(mrko900::gravity::graphics::Renderer& renderer, 
@@ -48,34 +50,52 @@ namespace mrko900::gravity::app {
     ProgramLoop::~ProgramLoop() {
         if (m_PlayButton != nullptr) {
             delete m_PlayButton;
-            delete m_PlayButtonColor;
+            delete m_PlayButtonAppearance;
         }
 
         if (m_MenuButton != nullptr) {
             delete m_MenuButton;
-            delete m_MenuButtonColor;
+            delete m_MenuButtonAppearance;
         }
 
         if (m_Menu != nullptr) {
             delete m_Menu;
-            delete m_MenuColor;
+            delete m_MenuAppearance;
         }
+
+        if (m_MenuLayout.rect0appearance != nullptr)
+            delete m_MenuLayout.rect0appearance;
+
+        if (m_MenuLayout.rect1appearance != nullptr)
+            delete m_MenuLayout.rect1appearance;
+
+        if (m_MenuLayout.massInputAppearance != nullptr)
+            delete m_MenuLayout.massInputAppearance;
+
+        if (m_MenuLayout.xvelInputAppearance != nullptr)
+            delete m_MenuLayout.xvelInputAppearance;
+
+        if (m_MenuLayout.yvelInputAppearance != nullptr)
+            delete m_MenuLayout.yvelInputAppearance;
+
+        if (m_MenuLayout.gInputAppearance != nullptr)
+            delete m_MenuLayout.gInputAppearance;
     }
 
-    void ProgramLoop::initButton(unsigned int id, Rectangle& rect, PlainColor& color, bool* statePtr,
-                                 std::function<void(bool)> onClickCallback) {
-        color.r = 1.0f;
-        color.g = 0.0f;
-        color.b = 0.0f;
-        color.a = 1.0f;
-        rect.appearance.type = AppearanceType::PLAIN_COLOR;
-        rect.appearance.ptr = &color;
+    AppearanceImpl* ProgramLoop::initButton(unsigned int id, Rectangle& rect, bool* statePtr,
+                                            std::function<void(bool)> onClickCallback) {
+        AppearanceAttribute attribs[1] { FILL_COLOR };
+        AppearanceImpl* appearance = new AppearanceImpl(attribs, 1);
+        appearance->getFillColor().r = 1.0f;
+        appearance->getFillColor().g = 0.0f;
+        appearance->getFillColor().b = 0.0f;
+        appearance->getFillColor().a = 1.0f;
         m_Buttons.push_back([this, &rect, onClickCallback, statePtr]
                             (unsigned short clickX, unsigned short clickY) {
             if (testRectangleClick(clickX, clickY, rect)) {
-                rect.appearance.plainColor() = *statePtr
-                    ? PlainColor { 1.0f, 0.0f, 0.0f, 1.0f }
-                    : PlainColor { 0.0f, 1.0f, 0.0f, 1.0f };
+                rect.appearance->getFillColor() = *statePtr
+                    ? RGBAColor { 1.0f, 0.0f, 0.0f, 1.0f }
+                    : RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                 *statePtr = !*statePtr;
                 onClickCallback(true);
                 m_CanSpawnObj = false;
@@ -83,39 +103,45 @@ namespace mrko900::gravity::app {
         });
         rect.width = rect.height = rect.x = rect.y = 0.0f;
         rect.layer = 0;
+        rect.appearance = appearance;
         m_Renderer.addRectangle(id, rect);
+        return appearance;
     }
 
     void ProgramLoop::init() {
-        m_PlayButtonColor = new PlainColor { 0.3f, 0.5f, 0.3f, 1.0f };
+        AppearanceAttribute attribs[1] = { FILL_COLOR };
+        m_PlayButtonAppearance = new AppearanceImpl(attribs, 1);
+        m_PlayButtonAppearance->getFillColor() = RGBAColor { 0.7f, 0.5f, 0.4f, 1.0f };
         m_PlayButton = new Circle { 
-            0.0f, 0.0f, 0.0f, Appearance { AppearanceType::PLAIN_COLOR, m_PlayButtonColor }, 0
+            0.0f, 0.0f, 0.0f, m_PlayButtonAppearance, 0
         };
         m_Renderer.addCircle(0, *m_PlayButton);
-
-        m_MenuButtonColor = new PlainColor { 0.8f, 0.1f, 0.35f, 1.0f };
+        
+        m_MenuButtonAppearance = new AppearanceImpl(attribs, 1);
+        m_MenuButtonAppearance->getFillColor() = RGBAColor { 0.3f, 0.8f, 0.95f, 1.0f };
         m_MenuButton = new Circle {
-            0.0f, 0.0f, 0.0f, Appearance { AppearanceType::PLAIN_COLOR, m_MenuButtonColor }, 0
+            0.0f, 0.0f, 0.0f, m_MenuButtonAppearance, 0
         };
         m_Renderer.addCircle(1, *m_MenuButton);
-
+        
+        m_MenuAppearance = new AppearanceImpl(attribs, 1);
+        m_MenuAppearance->getFillColor() = RGBAColor { 0.3f, 0.3f, 0.4f, 1.0f };
         m_Menu = new Rectangle {
-            0.0f, 0.0f, 0.0f, 0.0f, 
-            Appearance { AppearanceType::PLAIN_COLOR, m_MenuColor = new PlainColor { 0.8f, 0.3f, 0.8f, 1.0f } }, -1
+            0.0f, 0.0f, 0.0f, 0.0f, m_MenuAppearance, -1
         };
         m_Renderer.addRectangle(2, *m_Menu);
 
         m_Buttons.push_back([this](unsigned short clickX, unsigned short clickY) {
             if (testCircleClick(clickX, clickY, *m_PlayButton)) {
-                m_PlayButton->appearance.plainColor().g += 0.1f;
-                m_PlayButton->appearance.plainColor().r -= 0.03f;
-                m_PlayButton->appearance.plainColor().b += 0.15f;
-                if (m_PlayButton->appearance.plainColor().g >= 1.0f)
-                    m_PlayButton->appearance.plainColor().g -= 1.0f;
-                if (m_PlayButton->appearance.plainColor().r <= 0.0f)
-                    m_PlayButton->appearance.plainColor().r += 1.0f;
-                if (m_PlayButton->appearance.plainColor().b >= 1.0f)
-                    m_PlayButton->appearance.plainColor().b -= 1.0f;
+                m_PlayButton->appearance->getFillColor().g += 0.1f;
+                m_PlayButton->appearance->getFillColor().r -= 0.03f;
+                m_PlayButton->appearance->getFillColor().b += 0.15f;
+                if (m_PlayButton->appearance->getFillColor().g >= 1.0f)
+                    m_PlayButton->appearance->getFillColor().g -= 1.0f;
+                if (m_PlayButton->appearance->getFillColor().r <= 0.0f)
+                    m_PlayButton->appearance->getFillColor().r += 1.0f;
+                if (m_PlayButton->appearance->getFillColor().b >= 1.0f)
+                    m_PlayButton->appearance->getFillColor().b -= 1.0f;
                 m_CanSpawnObj = false;
             }
         });
@@ -143,22 +169,22 @@ namespace mrko900::gravity::app {
         });
 
         m_MenuLayout.rect0state = false;
-        initButton(3, m_MenuLayout.rect0, m_MenuLayout.rect0color, &m_MenuLayout.rect0state,
+        m_MenuLayout.rect0appearance = initButton(3, m_MenuLayout.rect0, &m_MenuLayout.rect0state,
             std::function<void(bool)>([](bool) {}));
         m_MenuLayout.rect1state = false;
-        initButton(4, m_MenuLayout.rect1, m_MenuLayout.rect1color, &m_MenuLayout.rect1state,
+        m_MenuLayout.rect1appearance = initButton(4, m_MenuLayout.rect1, &m_MenuLayout.rect1state,
             std::function<void(bool)>([](bool) {}));
         m_MenuLayout.massInputState = false;
-        initButton(5, m_MenuLayout.massInput, m_MenuLayout.massInputColor, &m_MenuLayout.massInputState,
+        m_MenuLayout.massInputAppearance = initButton(5, m_MenuLayout.massInput, &m_MenuLayout.massInputState,
             std::function<void(bool)>([](bool) {}));
         m_MenuLayout.xvelInputState = false;
-        initButton(6, m_MenuLayout.xvelInput, m_MenuLayout.xvelInputColor, &m_MenuLayout.xvelInputState,
+        m_MenuLayout.xvelInputAppearance = initButton(6, m_MenuLayout.xvelInput, &m_MenuLayout.xvelInputState,
             std::function<void(bool)> ([](bool) {}));
         m_MenuLayout.yvelInputState = false;
-        initButton(7, m_MenuLayout.yvelInput, m_MenuLayout.yvelInputColor, &m_MenuLayout.yvelInputState,
+        m_MenuLayout.yvelInputAppearance = initButton(7, m_MenuLayout.yvelInput, &m_MenuLayout.yvelInputState,
             std::function<void(bool)> ([](bool) {}));
         m_MenuLayout.gInputState = false;
-        initButton(8, m_MenuLayout.gInput, m_MenuLayout.gInputColor, &m_MenuLayout.gInputState,
+        m_MenuLayout.gInputAppearance = initButton(8, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
             std::function<void(bool)> ([](bool) {}));
 
         m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;

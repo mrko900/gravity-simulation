@@ -7,6 +7,7 @@
 #include <functional>
 #include <vector>
 #include <chrono>
+#include "../Graphics/AppearanceImpl.h"
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -33,18 +34,19 @@ namespace mrko900::gravity::app {
         CoordinateSystemHelper& m_CoordinateSystemHelper;
 
         mrko900::gravity::graphics::Circle* m_PlayButton;
-        mrko900::gravity::graphics::PlainColor* m_PlayButtonColor;
+        mrko900::gravity::graphics::AppearanceImpl* m_PlayButtonAppearance;
         mrko900::gravity::graphics::Circle* m_MenuButton;
-        mrko900::gravity::graphics::PlainColor* m_MenuButtonColor;
+        mrko900::gravity::graphics::AppearanceImpl* m_MenuButtonAppearance;
         mrko900::gravity::graphics::Rectangle* m_Menu;
-        mrko900::gravity::graphics::PlainColor* m_MenuColor;
+        mrko900::gravity::graphics::AppearanceImpl* m_MenuAppearance;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimBeginTime;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimPauseBeginTime;
         float m_MenuAnimCompletion;
 
-        void initButton(unsigned int id, mrko900::gravity::graphics::Rectangle& rect,
-                        mrko900::gravity::graphics::PlainColor& color, bool* statePtr, 
-                        std::function<void(bool)> onClickCallback);
+        mrko900::gravity::graphics::AppearanceImpl* initButton(unsigned int id, 
+                                                               mrko900::gravity::graphics::Rectangle& rect,
+                                                               bool* statePtr, 
+                                                               std::function<void(bool)> onClickCallback);
 
         bool m_CanSpawnObj;
         std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_Buttons;
@@ -55,27 +57,27 @@ namespace mrko900::gravity::app {
 
         struct MenuLayout {
             mrko900::gravity::graphics::Rectangle rect0;
-            mrko900::gravity::graphics::PlainColor rect0color;
+            mrko900::gravity::graphics::AppearanceImpl* rect0appearance;
             float rect0animbeginx;
             bool rect0state;
             mrko900::gravity::graphics::Rectangle rect1;
-            mrko900::gravity::graphics::PlainColor rect1color;
+            mrko900::gravity::graphics::AppearanceImpl* rect1appearance;
             float rect1animbeginx;
             bool rect1state;
             mrko900::gravity::graphics::Rectangle massInput;
-            mrko900::gravity::graphics::PlainColor massInputColor;
+            mrko900::gravity::graphics::AppearanceImpl* massInputAppearance;
             float massInputAnimBeginX;
             bool massInputState;
             mrko900::gravity::graphics::Rectangle xvelInput;
-            mrko900::gravity::graphics::PlainColor xvelInputColor;
+            mrko900::gravity::graphics::AppearanceImpl* xvelInputAppearance;
             float xvelInputAnimBeginX;
             bool xvelInputState;
             mrko900::gravity::graphics::Rectangle yvelInput;
-            mrko900::gravity::graphics::PlainColor yvelInputColor;
+            mrko900::gravity::graphics::AppearanceImpl* yvelInputAppearance;
             float yvelInputAnimBeginX;
             bool yvelInputState;
             mrko900::gravity::graphics::Rectangle gInput;
-            mrko900::gravity::graphics::PlainColor gInputColor;
+            mrko900::gravity::graphics::AppearanceImpl* gInputAppearance;
             float gInputAnimBeginX;
             bool gInputState;
         };
