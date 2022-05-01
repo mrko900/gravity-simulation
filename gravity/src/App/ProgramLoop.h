@@ -41,8 +41,12 @@ namespace mrko900::gravity::app {
         std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimBeginTime;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_MenuAnimPauseBeginTime;
         float m_MenuAnimCompletion;
-        float timeaccum = 0.0f;
 
+        void initButton(unsigned int id, mrko900::gravity::graphics::Rectangle& rect,
+                        mrko900::gravity::graphics::PlainColor& color, bool* statePtr, 
+                        std::function<void(bool)> onClickCallback);
+
+        bool m_CanSpawnObj;
         std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>> m_Buttons;
 
         enum class MenuState {
@@ -58,10 +62,22 @@ namespace mrko900::gravity::app {
             mrko900::gravity::graphics::PlainColor rect1color;
             float rect1animbeginx;
             bool rect1state;
-            mrko900::gravity::graphics::Rectangle mass[8];
-            mrko900::gravity::graphics::PlainColor masscolors[8];
-            float massanimbeginx[8];
-            bool massstates[8];
+            mrko900::gravity::graphics::Rectangle massInput;
+            mrko900::gravity::graphics::PlainColor massInputColor;
+            float massInputAnimBeginX;
+            bool massInputState;
+            mrko900::gravity::graphics::Rectangle xvelInput;
+            mrko900::gravity::graphics::PlainColor xvelInputColor;
+            float xvelInputAnimBeginX;
+            bool xvelInputState;
+            mrko900::gravity::graphics::Rectangle yvelInput;
+            mrko900::gravity::graphics::PlainColor yvelInputColor;
+            float yvelInputAnimBeginX;
+            bool yvelInputState;
+            mrko900::gravity::graphics::Rectangle gInput;
+            mrko900::gravity::graphics::PlainColor gInputColor;
+            float gInputAnimBeginX;
+            bool gInputState;
         };
 
         MenuLayout m_MenuLayout;
@@ -73,6 +89,9 @@ namespace mrko900::gravity::app {
         std::function<float(float time)> m_MenuAnimDisplacementFunc;
 
         bool testCircleClick(unsigned short clickX, unsigned short clickY,
-                             const mrko900::gravity::graphics::Circle* circle);
+                             const mrko900::gravity::graphics::Circle& circle);
+        bool testRectangleClick(unsigned short clickX, unsigned short clickY,
+                                const mrko900::gravity::graphics::Rectangle& rectangle);
     };
 }
+

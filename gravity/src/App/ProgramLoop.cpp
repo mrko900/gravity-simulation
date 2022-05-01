@@ -34,14 +34,15 @@ namespace mrko900::gravity::app {
         m_CoordinateSystemHelper(coordinateSystemHelper), m_ViewportUpdateRequested(false),
         m_ViewportInitializationRequested(false), m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight), 
         m_PlayButton(nullptr), m_MenuState(MenuState::CLOSED), m_MenuAnimBeginX(0.0f),
-        m_MenuAnimDisplacementFunc([] (float t) -> float {
+        m_MenuAnimDisplacementFunc([](float t) -> float {
             if (t < 0.0f || t > 2.0f)
                 throw std::invalid_argument("function domain is [0, 2]");
             return t <= 1.0f 
                    ? (t * t * (3.0f - 2.0f * t)) 
                    : ((t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 1);
         }), m_MenuAnimBeginTime(time_point<std::chrono::high_resolution_clock>()),
-        m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()), m_MenuAnimCompletion(0.0f) {
+        m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()), m_MenuAnimCompletion(0.0f),
+        m_CanSpawnObj(true) {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -59,6 +60,30 @@ namespace mrko900::gravity::app {
             delete m_Menu;
             delete m_MenuColor;
         }
+    }
+
+    void ProgramLoop::initButton(unsigned int id, Rectangle& rect, PlainColor& color, bool* statePtr,
+                                 std::function<void(bool)> onClickCallback) {
+        color.r = 1.0f;
+        color.g = 0.0f;
+        color.b = 0.0f;
+        color.a = 1.0f;
+        rect.appearance.type = AppearanceType::PLAIN_COLOR;
+        rect.appearance.ptr = &color;
+        m_Buttons.push_back([this, &rect, onClickCallback, statePtr]
+                            (unsigned short clickX, unsigned short clickY) {
+            if (testRectangleClick(clickX, clickY, rect)) {
+                rect.appearance.plainColor() = *statePtr
+                    ? PlainColor { 1.0f, 0.0f, 0.0f, 1.0f }
+                    : PlainColor { 0.0f, 1.0f, 0.0f, 1.0f };
+                *statePtr = !*statePtr;
+                onClickCallback(true);
+                m_CanSpawnObj = false;
+            }
+        });
+        rect.width = rect.height = rect.x = rect.y = 0.0f;
+        rect.layer = 0;
+        m_Renderer.addRectangle(id, rect);
     }
 
     void ProgramLoop::init() {
@@ -80,9 +105,8 @@ namespace mrko900::gravity::app {
         };
         m_Renderer.addRectangle(2, *m_Menu);
 
-        m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
-            if (testCircleClick(clickX, clickY, m_PlayButton)) {
-                // test
+        m_Buttons.push_back([this](unsigned short clickX, unsigned short clickY) {
+            if (testCircleClick(clickX, clickY, *m_PlayButton)) {
                 m_PlayButton->appearance.plainColor().g += 0.1f;
                 m_PlayButton->appearance.plainColor().r -= 0.03f;
                 m_PlayButton->appearance.plainColor().b += 0.15f;
@@ -92,12 +116,12 @@ namespace mrko900::gravity::app {
                     m_PlayButton->appearance.plainColor().r += 1.0f;
                 if (m_PlayButton->appearance.plainColor().b >= 1.0f)
                     m_PlayButton->appearance.plainColor().b -= 1.0f;
-                // end test
+                m_CanSpawnObj = false;
             }
         });
 
         m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
-            if (testCircleClick(clickX, clickY, m_MenuButton)) {
+            if (testCircleClick(clickX, clickY, *m_MenuButton)) {
                 if (m_MenuState == MenuState::CLOSED) {
                     m_MenuState = MenuState::OPENING;
                     m_MenuAnimBeginTime = high_resolution_clock::now();
@@ -106,23 +130,36 @@ namespace mrko900::gravity::app {
                     m_MenuAnimBeginTime += (high_resolution_clock::now() - m_MenuAnimPauseBeginTime);
                     m_MenuState = MenuState::CLOSING;
                 }
+                m_CanSpawnObj = false;
             }
         });
 
-        m_MenuLayout.rect0color = PlainColor { 1.0f, 0.0f, 0.0f, 1.0f };
-        m_MenuLayout.rect0.appearance = Appearance { AppearanceType::PLAIN_COLOR, &m_MenuLayout.rect0color };
-        m_MenuLayout.rect0.layer = 0;
-
+        // object spawning
         m_Buttons.push_back([this] (unsigned short clickX, unsigned short clickY) {
-            if (m_MenuLayout.rect0state) {
-                m_MenuLayout.rect0color = PlainColor { 1.0f, 0.0f, 0.0f, 1.0f };
-            } else {
-                m_MenuLayout.rect0color = PlainColor { 0.0f, 1.0f, 0.0f, 1.0f };
-            }
-            m_MenuLayout.rect0state = !m_MenuLayout.rect0state;
+            if (m_CanSpawnObj && !testRectangleClick(clickX, clickY, *m_Menu)) {
+                // todo spawn an obj
+            } else
+                m_CanSpawnObj = true;
         });
 
-        m_Renderer.addRectangle(3, m_MenuLayout.rect0);
+        m_MenuLayout.rect0state = false;
+        initButton(3, m_MenuLayout.rect0, m_MenuLayout.rect0color, &m_MenuLayout.rect0state,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.rect1state = false;
+        initButton(4, m_MenuLayout.rect1, m_MenuLayout.rect1color, &m_MenuLayout.rect1state,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.massInputState = false;
+        initButton(5, m_MenuLayout.massInput, m_MenuLayout.massInputColor, &m_MenuLayout.massInputState,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.xvelInputState = false;
+        initButton(6, m_MenuLayout.xvelInput, m_MenuLayout.xvelInputColor, &m_MenuLayout.xvelInputState,
+            std::function<void(bool)> ([](bool) {}));
+        m_MenuLayout.yvelInputState = false;
+        initButton(7, m_MenuLayout.yvelInput, m_MenuLayout.yvelInputColor, &m_MenuLayout.yvelInputState,
+            std::function<void(bool)> ([](bool) {}));
+        m_MenuLayout.gInputState = false;
+        initButton(8, m_MenuLayout.gInput, m_MenuLayout.gInputColor, &m_MenuLayout.gInputState,
+            std::function<void(bool)> ([](bool) {}));
 
         m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;
     }
@@ -145,12 +182,41 @@ namespace mrko900::gravity::app {
             m_MenuButton->y = weightY(0.9f);
             m_MenuButton->radius = weightY(0.08f);
 
-            //m_MenuLayout.rect0animbeginx = m_MenuAnimBeginX + m_Menu->width - m_Menu->width / 5;
-            m_MenuLayout.rect0animbeginx = m_MenuAnimBeginX + m_Menu->width / 2 - weightY(0.2);
+            m_MenuLayout.rect0animbeginx = m_MenuAnimBeginX - m_Menu->width / 2.0f + weightY(0.2f);
             m_MenuLayout.rect0.x = m_MenuLayout.rect0animbeginx - m_MenuAnimCompletion * m_Menu->width;
             m_MenuLayout.rect0.y = weightY(0.8f);
             m_MenuLayout.rect0.width = weightY(0.2f);
             m_MenuLayout.rect0.height = weightY(0.2f);
+
+            m_MenuLayout.rect1animbeginx = m_MenuAnimBeginX + m_Menu->width / 2.0f - weightY(0.2f);
+            m_MenuLayout.rect1.x = m_MenuLayout.rect1animbeginx - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.rect1.y = weightY(0.8f);
+            m_MenuLayout.rect1.width = weightY(0.2f);
+            m_MenuLayout.rect1.height = weightY(0.2f);
+
+            m_MenuLayout.massInputAnimBeginX = m_MenuAnimBeginX;
+            m_MenuLayout.massInput.x = m_MenuLayout.massInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.massInput.y = weightY(0.5f);
+            m_MenuLayout.massInput.width = m_Menu->width - weightY(0.2f);
+            m_MenuLayout.massInput.height = weightY(0.2f);
+
+            m_MenuLayout.xvelInputAnimBeginX = m_MenuAnimBeginX - m_Menu->width / 2.0f + weightY(0.2f);
+            m_MenuLayout.xvelInput.x = m_MenuLayout.xvelInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.xvelInput.y = weightY(0.2f);
+            m_MenuLayout.xvelInput.width = weightY(0.2f);
+            m_MenuLayout.xvelInput.height = weightY(0.2f);
+
+            m_MenuLayout.yvelInputAnimBeginX = m_MenuAnimBeginX + m_Menu->width / 2.0f - weightY(0.2f);
+            m_MenuLayout.yvelInput.x = m_MenuLayout.yvelInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.yvelInput.y = weightY(0.2f);
+            m_MenuLayout.yvelInput.width = weightY(0.2f);
+            m_MenuLayout.yvelInput.height = weightY(0.2f);
+
+            m_MenuLayout.gInputAnimBeginX = m_MenuAnimBeginX;
+            m_MenuLayout.gInput.x = m_MenuLayout.gInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.gInput.y = weightY(-0.1f);
+            m_MenuLayout.gInput.width = m_Menu->width - weightY(0.2f);
+            m_MenuLayout.gInput.height = weightY(0.2f);
 
             if (!m_ViewportInitializationRequested) {
                 m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
@@ -162,6 +228,11 @@ namespace mrko900::gravity::app {
             m_Renderer.refreshFigure(1);
             m_Renderer.refreshFigure(2);
             m_Renderer.refreshFigure(3);
+            m_Renderer.refreshFigure(4);
+            m_Renderer.refreshFigure(5);
+            m_Renderer.refreshFigure(6);
+            m_Renderer.refreshFigure(7);
+            m_Renderer.refreshFigure(8);
 
             m_ViewportUpdateRequested = false;
         }
@@ -187,11 +258,21 @@ namespace mrko900::gravity::app {
             m_MenuButton->x = m_MenuButtonAnimBeginX - dx;
             m_PlayButton->x = m_PlayButtonAnimBeginX - dx;
             m_MenuLayout.rect0.x = m_MenuLayout.rect0animbeginx - dx;
-
+            m_MenuLayout.rect1.x = m_MenuLayout.rect1animbeginx - dx;
+            m_MenuLayout.massInput.x = m_MenuLayout.massInputAnimBeginX - dx;
+            m_MenuLayout.xvelInput.x = m_MenuLayout.xvelInputAnimBeginX - dx;
+            m_MenuLayout.yvelInput.x = m_MenuLayout.yvelInputAnimBeginX - dx;
+            m_MenuLayout.gInput.x = m_MenuLayout.gInputAnimBeginX - dx;
+            
             m_Renderer.refreshFigure(0);
             m_Renderer.refreshFigure(1);
             m_Renderer.refreshFigure(2);
             m_Renderer.refreshFigure(3);
+            m_Renderer.refreshFigure(4);
+            m_Renderer.refreshFigure(5);
+            m_Renderer.refreshFigure(6);
+            m_Renderer.refreshFigure(7);
+            m_Renderer.refreshFigure(8);
 
             if (normalizedTimeDiff >= 2.0f)
                 m_MenuAnimCompletion = 0.0f;
@@ -216,17 +297,27 @@ namespace mrko900::gravity::app {
         }
     }
 
-    bool ProgramLoop::testCircleClick(unsigned short clickX, unsigned short clickY, const Circle* circle) {
+    bool ProgramLoop::testCircleClick(unsigned short clickX, unsigned short clickY, const Circle& circle) {
         float normalizedX = (float) clickX / (float) m_ViewportWidth * 2 - 1;
         float normalizedY = (float) clickY / (float) m_ViewportHeight * 2 - 1;
         float weightedX = weightX(normalizedX);
         float weightedY = weightY(normalizedY);
-        float x = weightedX - circle->x;
-        float y = weightedY - circle->y;
-        float r = circle->radius;
+        float x = weightedX - circle.x;
+        float y = weightedY - circle.y;
+        float r = circle.radius;
         return x * x + y * y <= r * r;
     }
 
-    //bool ProgramLoop::testRectangleClick(unsigned short clickX, unsigned short clickY, const Rectangle* rectangle) {
-    //}
+    bool ProgramLoop::testRectangleClick(unsigned short clickX, unsigned short clickY, const Rectangle& rectangle) {
+        float normalizedX = (float) clickX / (float) m_ViewportWidth * 2 - 1;
+        float normalizedY = (float) clickY / (float) m_ViewportHeight * 2 - 1;
+        float weightedX = weightX(normalizedX);
+        float weightedY = weightY(normalizedY);
+        float halfWidth = rectangle.width / 2;
+        float halfHeight = rectangle.height / 2;
+        return weightedX > rectangle.x - halfWidth
+            && weightedX < rectangle.x + halfWidth
+            && weightedY > rectangle.y - halfHeight
+            && weightedY < rectangle.y + halfHeight;
+    }
 }

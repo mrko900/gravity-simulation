@@ -230,7 +230,7 @@ namespace mrko900::gravity::app::win {
         m_ProgramLoop = &programLoop;
         m_ProgramLoopRunning = true;
 
-        //wglSwapIntervalEXT(1);
+        wglSwapIntervalEXT(0);
 
         std::chrono::steady_clock::time_point secondStart = std::chrono::high_resolution_clock::now();
 
