@@ -103,6 +103,7 @@ namespace mrko900::gravity::app {
             mrko900::gravity::graphics::Circle circle;
             float normalizedX, normalizedY;
             bool refresh;
+            float aspectRatio;
         };
 
         std::unordered_map<unsigned int, Object> m_Objects;

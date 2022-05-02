@@ -178,7 +178,7 @@ namespace mrko900::gravity::app {
                 m_Objects.insert({ idd, Object {
                     AppearanceImpl(attributes, 1), 
                     Circle { x, y, weightY(0.375f) * m_WorldScale * m_AspectRatio, nullptr, -2 }, 
-                    normalizedX, normalizedY, false
+                    normalizedX, normalizedY, false, m_AspectRatio
                 } });
                 unsigned int myId = idd;
                 if (revalidate) {
@@ -373,7 +373,7 @@ namespace mrko900::gravity::app {
                 object.normalizedX *= k;
                 object.normalizedY *= k;
                 object.circle.x = weightX(object.normalizedX);
-                object.circle.y = weightY(object.normalizedY);
+                object.circle.y = weightY(object.normalizedY) * m_AspectRatio / object.aspectRatio;
                 object.circle.radius *= k;
                 refresh.insert(entry.first);
             }
@@ -387,6 +387,9 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::updateViewport(unsigned short newWidth, unsigned short newHeight) {
+        //m_OldWorldScale = m_WorldScale;
+        //m_WorldScale *= (float) newWidth / (float) m_ViewportWidth;
+
         m_ViewportUpdateRequested = true;
         m_ViewportWidth = newWidth;
         m_ViewportHeight = newHeight;
@@ -414,7 +417,6 @@ namespace mrko900::gravity::app {
                 button(mouseClick.x, mouseClick.y);
         } else if (input == MOUSE_WHEEL) {
             float mouseWheelEvent = *((float*) data);
-            m_OldWorldScale = m_WorldScale;
             m_WorldScale *= 1.0f + 0.1f * mouseWheelEvent;
         }
     }
