@@ -29,6 +29,7 @@ namespace mrko900::gravity::app {
         bool m_ViewportInitializationRequested;
         unsigned short m_ViewportWidth;
         unsigned short m_ViewportHeight;
+        float m_AspectRatio;
 
         mrko900::gravity::graphics::Renderer& m_Renderer;
         CoordinateSystemHelper& m_CoordinateSystemHelper;

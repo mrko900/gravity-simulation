@@ -45,7 +45,8 @@ namespace mrko900::gravity::app {
                    : ((t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 1.0f);
         }), m_MenuAnimBeginTime(time_point<std::chrono::high_resolution_clock>()),
         m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()), m_MenuAnimCompletion(0.0f),
-        m_CanSpawnObj(true), m_WorldScale(1.0f), m_OldWorldScale(m_WorldScale) {
+        m_CanSpawnObj(true), m_WorldScale(1.0f), m_OldWorldScale(m_WorldScale), 
+        m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight) {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -175,7 +176,8 @@ namespace mrko900::gravity::app {
                 AppearanceAttribute attributes[] { FILL_COLOR };
                 bool revalidate = m_Objects.bucket_count() * m_Objects.max_load_factor() == m_Objects.size();
                 m_Objects.insert({ idd, Object {
-                    AppearanceImpl(attributes, 1), Circle { x, y, weightY(0.375f) * m_WorldScale, nullptr, -2 }, 
+                    AppearanceImpl(attributes, 1), 
+                    Circle { x, y, weightY(0.375f) * m_WorldScale * m_AspectRatio, nullptr, -2 }, 
                     normalizedX, normalizedY, false
                 } });
                 unsigned int myId = idd;
@@ -388,6 +390,7 @@ namespace mrko900::gravity::app {
         m_ViewportUpdateRequested = true;
         m_ViewportWidth = newWidth;
         m_ViewportHeight = newHeight;
+        m_AspectRatio = (float) newWidth / (float) newHeight;
     }
 
     void ProgramLoop::userInput(UserInput input, void* data) {
