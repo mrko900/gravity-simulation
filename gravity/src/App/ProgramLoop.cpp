@@ -46,7 +46,8 @@ namespace mrko900::gravity::app {
         }), m_MenuAnimBeginTime(time_point<std::chrono::high_resolution_clock>()),
         m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()), m_MenuAnimCompletion(0.0f),
         m_CanSpawnObj(true), m_WorldScale(1.0f), m_OldWorldScale(m_WorldScale), 
-        m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight) {
+        m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
+        m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f) {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -366,6 +367,25 @@ namespace mrko900::gravity::app {
             }
         }
 
+        if (m_PerspectiveChangeX != 0.0f) {
+            for (auto& entry : m_Objects) {
+                Object& object = entry.second;
+                object.normalizedX += m_PerspectiveChangeX;
+                object.circle.x = weightX(object.normalizedX);
+                refresh.insert(entry.first);
+            }
+            m_PerspectiveChangeX = 0.0f;
+        }
+        if (m_PerspectiveChangeY != 0.0f) {
+            for (auto& entry : m_Objects) {
+                Object& object = entry.second;
+                object.normalizedY += m_PerspectiveChangeY;
+                object.circle.y = weightY(object.normalizedY) * m_AspectRatio / object.aspectRatio;
+                refresh.insert(entry.first);
+            }
+            m_PerspectiveChangeY = 0.0f;
+        }
+
         if (m_WorldScale != m_OldWorldScale) {
             for (auto& entry : m_Objects) {
                 Object& object = entry.second;
@@ -387,9 +407,6 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::updateViewport(unsigned short newWidth, unsigned short newHeight) {
-        //m_OldWorldScale = m_WorldScale;
-        //m_WorldScale *= (float) newWidth / (float) m_ViewportWidth;
-
         m_ViewportUpdateRequested = true;
         m_ViewportWidth = newWidth;
         m_ViewportHeight = newHeight;
@@ -398,7 +415,7 @@ namespace mrko900::gravity::app {
 
     void ProgramLoop::userInput(UserInput input, void* data) {
         if (input == MOUSE_PRESSED) {
-            MouseClickInputData mouseClick = *((MouseClickInputData*) data);
+            const MouseClickInputData& mouseClick = *((MouseClickInputData*) data);
             const std::vector<std::function<void(unsigned short clickX, unsigned short clickY)>>* clickables;
             switch (mouseClick.button) {
                 case MouseButton::LEFT:
@@ -406,6 +423,7 @@ namespace mrko900::gravity::app {
                     break;
                 case MouseButton::RIGHT:
                     clickables = &m_RightClickables;
+                    m_ChangingPerspective = true;
                     break;
                 case MouseButton::MIDDLE:
                     clickables = &m_MiddleClickables;
@@ -415,9 +433,25 @@ namespace mrko900::gravity::app {
             }
             for (auto& button : *clickables)
                 button(mouseClick.x, mouseClick.y);
+        } else if (input == MOUSE_RELEASED) {
+            const MouseClickInputData& mouseClick = *((MouseClickInputData*) data);
+            if (mouseClick.button == MouseButton::RIGHT)
+                m_ChangingPerspective = false;
         } else if (input == MOUSE_WHEEL) {
             float mouseWheelEvent = *((float*) data);
             m_WorldScale *= 1.0f + 0.1f * mouseWheelEvent;
+        } else if (input == MOUSE_MOVE) {
+            if (m_ChangingPerspective) {
+                const MouseMoveInputData& mouseMove = *((MouseMoveInputData*) data);
+                short viewportDX = abs(mouseMove.toX - mouseMove.fromX);
+                short viewportDY = abs(mouseMove.toY - mouseMove.fromY);
+                float kx = mouseMove.toX > mouseMove.fromX ? 1.0f : -1.0f;
+                float ky = mouseMove.toY > mouseMove.fromY ? 1.0f : -1.0f;
+                float normalizedDX = abs((float) viewportDX / (float) m_ViewportWidth * 2.0f);
+                float normalizedDY = abs((float) viewportDY / (float) m_ViewportHeight * 2.0f);
+                m_PerspectiveChangeX = kx * normalizedDX;
+                m_PerspectiveChangeY = ky * normalizedDY;
+            }
         }
     }
 

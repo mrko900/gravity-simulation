@@ -28,6 +28,9 @@ namespace mrko900::gravity::app::win {
         bool m_ProgramLoopRunning;
         mrko900::gravity::app::ProgramLoop* m_ProgramLoop;
 
+        unsigned short m_CursorX;
+        unsigned short m_CursorY;
+
         void initGL();
         void updateViewport(unsigned short newWidth, unsigned short newHeight);
 
@@ -39,10 +42,14 @@ namespace mrko900::gravity::app::win {
         static void onWmKey(HWND hWnd, WPARAM wParam, UserInput ui);
         static void onWmKeyDown(HWND hWnd, WPARAM wParam);
         static void onWmKeyUp(HWND hWnd, WPARAM wParam);
-        static void onWmMouseButtonDown(HWND hWnd, LPARAM lParam, MouseButton mouseButton);
+        static void onWmMouseButton(HWND hWnd, LPARAM lParam, MouseButton mouseButton, bool down);
         static void onWmLButtonDown(HWND hWnd, LPARAM lParam);
         static void onWmRButtonDown(HWND hWnd, LPARAM lParam);
         static void onWmMButtonDown(HWND hWnd, LPARAM lParam);
+        static void onWmLButtonUp(HWND hWnd, LPARAM lParam);
+        static void onWmRButtonUp(HWND hWnd, LPARAM lParam);
+        static void onWmMButtonUp(HWND hWnd, LPARAM lParam);
         static void onWmMouseWheel(HWND hWnd, WPARAM wParam);
+        static void onWmMouseMove(HWND hWnd, LPARAM lParam);
     };
 }

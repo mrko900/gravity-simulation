@@ -235,12 +235,15 @@ namespace mrko900::gravity::app::win {
 
         std::chrono::steady_clock::time_point secondStart = std::chrono::high_resolution_clock::now();
 
+        POINT p;
+        GetCursorPos(&p);
+        ScreenToClient(m_CurrentWindow, &p);
+        m_CursorX = p.x;
+        m_CursorY = p.y;
+
         unsigned int frames = 0;
 
         MSG msg;
-        float loop = 0.0f;
-        int i = 0;
-        float pi = 2 * asinf(1);
         for (;;) {
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
                 if (msg.message == WM_QUIT)
@@ -381,30 +384,42 @@ namespace mrko900::gravity::app::win {
         onWmKey(hWnd, wParam, KEY_RELEASED);
     }
 
-    void WinProgram::onWmMouseButtonDown(HWND hWnd, LPARAM lParam, MouseButton mouseButton) {
+    void WinProgram::onWmMouseButton(HWND hWnd, LPARAM lParam, MouseButton mouseButton, bool down) {
         WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
         if (!obj.m_ProgramLoopRunning)
             return;
         RECT clientRect;
         GetClientRect(hWnd, &clientRect);
-        MouseClickInputData data = MouseClickInputData(
-            GET_X_LPARAM(lParam),
-            clientRect.bottom - GET_Y_LPARAM(lParam),
+        MouseClickInputData data {
+            static_cast<unsigned short>(GET_X_LPARAM(lParam)),
+            static_cast<unsigned short>(clientRect.bottom - GET_Y_LPARAM(lParam)),
             mouseButton
-        );
-        obj.m_ProgramLoop->userInput(MOUSE_PRESSED, &data);
+        };
+        obj.m_ProgramLoop->userInput(down ? MOUSE_PRESSED : MOUSE_RELEASED, &data);
     }
 
     void WinProgram::onWmLButtonDown(HWND hWnd, LPARAM lParam) {
-        onWmMouseButtonDown(hWnd, lParam, MouseButton::LEFT);
+        onWmMouseButton(hWnd, lParam, MouseButton::LEFT, true);
     }
 
     void WinProgram::onWmRButtonDown(HWND hWnd, LPARAM lParam) {
-        onWmMouseButtonDown(hWnd, lParam, MouseButton::RIGHT);
+        onWmMouseButton(hWnd, lParam, MouseButton::RIGHT, true);
     }
 
     void WinProgram::onWmMButtonDown(HWND hWnd, LPARAM lParam) {
-        onWmMouseButtonDown(hWnd, lParam, MouseButton::MIDDLE);
+        onWmMouseButton(hWnd, lParam, MouseButton::MIDDLE, true);
+    }
+
+    void WinProgram::onWmLButtonUp(HWND hWnd, LPARAM lParam) {
+        onWmMouseButton(hWnd, lParam, MouseButton::LEFT, false);
+    }
+
+    void WinProgram::onWmRButtonUp(HWND hWnd, LPARAM lParam) {
+        onWmMouseButton(hWnd, lParam, MouseButton::RIGHT, false);
+    }
+
+    void WinProgram::onWmMButtonUp(HWND hWnd, LPARAM lParam) {
+        onWmMouseButton(hWnd, lParam, MouseButton::MIDDLE, false);
     }
 
     void WinProgram::onWmMouseWheel(HWND hWnd, WPARAM wParam) {
@@ -415,6 +430,25 @@ namespace mrko900::gravity::app::win {
         param /= abs(param);
         float data = param;
         obj.m_ProgramLoop->userInput(MOUSE_WHEEL, &data);
+    }
+
+    void WinProgram::onWmMouseMove(HWND hWnd, LPARAM lParam) {
+        WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
+        if (!obj.m_ProgramLoopRunning)
+            return;
+        WORD x = GET_X_LPARAM(lParam);
+        WORD y = GET_Y_LPARAM(lParam);
+        RECT clientRect;
+        GetClientRect(hWnd, &clientRect);
+        y = clientRect.bottom - y;
+        MouseMoveInputData data {
+            obj.m_CursorX, obj.m_CursorY,
+            static_cast<unsigned short>(x), static_cast<unsigned short>(y) 
+        };
+        obj.m_ProgramLoop->userInput(MOUSE_MOVE, &data);
+
+        obj.m_CursorX = x;
+        obj.m_CursorY = y;
     }
 
     LRESULT WinProgram::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -445,14 +479,24 @@ namespace mrko900::gravity::app::win {
             case WM_MBUTTONDOWN:
                 onWmMButtonDown(hWnd, lParam);
                 break;
+            case WM_LBUTTONUP:
+                onWmLButtonUp(hWnd, lParam);
+                break;
+            case WM_RBUTTONUP:
+                onWmRButtonUp(hWnd, lParam);
+                break;
+            case WM_MBUTTONUP:
+                onWmMButtonUp(hWnd, lParam);
+                break;
             case WM_MOUSEWHEEL:
                 onWmMouseWheel(hWnd, wParam);
                 break;
-
+            case WM_MOUSEMOVE:
+                onWmMouseMove(hWnd, lParam);
+                break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
         }
-
         return 0;
     }
 }

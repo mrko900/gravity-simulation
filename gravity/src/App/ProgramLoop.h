@@ -115,5 +115,10 @@ namespace mrko900::gravity::app {
 
         float m_WorldScale;
         float m_OldWorldScale;
+
+        float m_PerspectiveChangeX;
+        float m_PerspectiveChangeY;
+
+        bool m_ChangingPerspective;
     };
 }

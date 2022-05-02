@@ -6,7 +6,8 @@ namespace mrko900::gravity::app {
         MOUSE_RELEASED, // - MouseClickInputData
         KEY_PRESSED, // - KeyboardInputData
         KEY_RELEASED, // - KeyboardInputData
-        MOUSE_WHEEL // - float
+        MOUSE_WHEEL, // - float,
+        MOUSE_MOVE // - MouseMoveInputData
     };
 
     enum class MouseButton {
@@ -21,5 +22,9 @@ namespace mrko900::gravity::app {
 
     enum class KeyboardInputData {
         SPACE
+    };
+
+    struct MouseMoveInputData {
+        unsigned short fromX, fromY, toX, toY;
     };
 }
