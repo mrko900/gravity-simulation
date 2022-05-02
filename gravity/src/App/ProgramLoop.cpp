@@ -49,7 +49,8 @@ namespace mrko900::gravity::app {
         m_CanSpawnObj(true), m_WorldScale(1.0f), m_OldWorldScale(m_WorldScale), 
         m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
         m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
-        m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f) {
+        m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
+        m_GravitationalEnvironment(1.0f)  {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -188,7 +189,8 @@ namespace mrko900::gravity::app {
                         MassPoint { 50.0f, nullptr },
                         VectorModelImpl(2),
                         DynamicCoordinatesImpl(),
-                        DynamicPoint {}
+                        DynamicPoint {},
+                        GravityField { nullptr, true, nullptr }
                     }
                 } });
                 unsigned int myId = idd;
@@ -204,27 +206,38 @@ namespace mrko900::gravity::app {
                         object.physics.dynamicPoint.massPoint = &object.physics.massPoint;
                         object.physics.dynamicPoint.forceModel = &object.physics.forceModel;
                         object.physics.dynamicPoint.velocity = &object.physics.velocity;
+                        object.physics.gravityField.massPoint = &object.physics.massPoint;
+                        object.physics.gravityField.netGravitationalForce = &object.physics.forces.at(0);
+                        object.physics.forceModel.removeVector(0);
+                        object.physics.forceModel.addVector(0, object.physics.forces.back());
                     }
                 }
                 Object& me = m_Objects.at(myId);
                 me.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                 me.circle.appearance = &me.appearance;
                 me.physics.massPoint.coordinates = &me.physics.coordinates;
-                me.physics.dynamicPoint.massPoint = &me.physics.massPoint;
-                me.physics.dynamicPoint.forceModel = &me.physics.forceModel;
-                me.physics.dynamicPoint.velocity = &me.physics.velocity;
+                DynamicPoint& dynamicPoint = me.physics.dynamicPoint;
+                dynamicPoint.massPoint = &me.physics.massPoint;
+                dynamicPoint.forceModel = &me.physics.forceModel;
+                dynamicPoint.velocity = &me.physics.velocity;
                 me.physics.forces.push_back(DynamicCoordinatesImpl());
-                me.physics.forces.back().setCoordinate(0, -100.0f);
-                me.physics.forces.back().setCoordinate(1, -100.0f);
-                me.physics.forceModel.addVector(0, me.physics.forces.at(0));
-                me.physics.coordinates.setCoordinate(0, worldX(me.normalizedX));
-                me.physics.coordinates.setCoordinate(1, worldY(me.normalizedY, me.aspectRatio));
-                me.physics.oldCoordinates.setCoordinate(0, me.physics.coordinates.getCoordinate(0));
-                me.physics.oldCoordinates.setCoordinate(1, me.physics.coordinates.getCoordinate(1));
-                me.physics.velocity.setCoordinate(0, 0.0f);
-                me.physics.velocity.setCoordinate(1, 0.0f);
+                me.physics.forces.back().setCoordinate(0, 0.0f);
+                me.physics.forces.back().setCoordinate(1, 0.0f);
+                me.physics.forceModel.addVector(0, me.physics.forces.back());
+                DynamicCoordinatesImpl& coordinates = me.physics.coordinates;
+                coordinates.setCoordinate(0, worldX(me.normalizedX));
+                coordinates.setCoordinate(1, worldY(me.normalizedY, me.aspectRatio));
+                DynamicCoordinatesImpl& oldCoordinates = me.physics.oldCoordinates;
+                oldCoordinates.setCoordinate(0, coordinates.getCoordinate(0));
+                oldCoordinates.setCoordinate(1, coordinates.getCoordinate(1));
+                DynamicCoordinatesImpl& velocity = me.physics.velocity;
+                velocity.setCoordinate(0, 0.0f);
+                velocity.setCoordinate(1, 0.0f);
+                me.physics.gravityField.massPoint = &me.physics.massPoint;
+                me.physics.gravityField.netGravitationalForce = &me.physics.forces.at(0);
                 m_Renderer.addCircle(idd, me.circle);
                 m_ForceSimulation.addEntity(idd, me.physics.dynamicPoint);
+                m_GravitationalEnvironment.addEntity(idd, me.physics.gravityField);
                 ++idd;
             } else
                 m_CanSpawnObj = true;
@@ -422,7 +435,8 @@ namespace mrko900::gravity::app {
         }
 
         // physics
-        m_ForceSimulation.simulate(0.0001f);
+        m_ForceSimulation.simulate(0.00001f);
+        //m_GravitationalEnvironment.calculate();
         for (auto& entry : m_Objects) {
             Object& object = entry.second;
             float newWorldX = object.physics.coordinates.getCoordinate(0);

@@ -11,6 +11,7 @@
 #include "../Physics/UniformForceSimulation.h"
 #include "../Physics/VectorModelImpl.h"
 #include "../Physics/DynamicCoordinatesImpl.h"
+#include "../Physics/GravitationalEnvironment.h"
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -108,6 +109,7 @@ namespace mrko900::gravity::app {
             physics::VectorModelImpl forceModel;
             physics::DynamicCoordinatesImpl velocity;
             physics::DynamicPoint dynamicPoint;
+            physics::GravityField gravityField;
             std::vector<physics::DynamicCoordinatesImpl> forces;
         };
 
@@ -145,5 +147,6 @@ namespace mrko900::gravity::app {
         bool m_ChangingPerspective;
 
         physics::UniformForceSimulation m_ForceSimulation;
+        physics::GravitationalEnvironment m_GravitationalEnvironment;
     };
 }

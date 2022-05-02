@@ -3,8 +3,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include <iostream>
-
+#include <iostream> // todo remove
 namespace mrko900::gravity::physics {
     GravitationalEnvironment::GravitationalEnvironment(float k) : m_Coef(k) {
     }
@@ -34,28 +33,43 @@ namespace mrko900::gravity::physics {
         auto iEnd = m_Entities.end();
         --iEnd;
         for (auto& entry : m_Entities) {
-            for (int i = 0; i < entry.second->netGravitationalForce.dimensions(); ++i)
-                entry.second->netGravitationalForce.setCoordinate(i, 0.0f);
+            for (int i = 0; i < entry.second->netGravitationalForce->dimensions(); ++i)
+                entry.second->netGravitationalForce->setCoordinate(i, 0.0f);
         }
+
+        // todo:
+        // don't calculate force for each dimension separately (that's wrong)
+        // calculate distance, find the magnitude of the force, then find its direction
+        // and break down into individual components and then pack them into a vector
+
         for (auto iIt = m_Entities.begin(); iIt != iEnd; ++iIt) {
             for (auto jIt = iIt; jIt != m_Entities.end(); ++jIt) {
                 if (jIt == iIt)
                     continue;
-                for (int d = 0; d < iIt->second->massPoint.coordinates->dimensions(); ++d) {
+                for (int d = 0; d < iIt->second->massPoint->coordinates->dimensions(); ++d) {
                     if (!iIt->second->dynamic && !jIt->second->dynamic)
                         continue;
-                    float dist = abs(iIt->second->massPoint.coordinates->getCoordinate(d) 
-                                     - jIt->second->massPoint.coordinates->getCoordinate(d));
-                    float force = m_Coef * iIt->second->massPoint.mass * jIt->second->massPoint.mass
+                    float dist = abs(iIt->second->massPoint->coordinates->getCoordinate(d) 
+                                     - jIt->second->massPoint->coordinates->getCoordinate(d));
+                    float force = m_Coef * iIt->second->massPoint->mass * jIt->second->massPoint->mass
                                   / (dist * dist);
+                    std::cout << d << ": " << force;
+                    std::cout << ", ";
                     if (iIt->second->dynamic)
-                        iIt->second->netGravitationalForce.setCoordinate(d, 
-                            iIt->second->netGravitationalForce.getCoordinate(d) + force);
+                        iIt->second->netGravitationalForce->setCoordinate(d, 
+                            iIt->second->netGravitationalForce->getCoordinate(d) + force);
                     if (jIt->second->dynamic)
-                        jIt->second->netGravitationalForce.setCoordinate(d, 
-                            jIt->second->netGravitationalForce.getCoordinate(d) + force);
+                        jIt->second->netGravitationalForce->setCoordinate(d, 
+                            jIt->second->netGravitationalForce->getCoordinate(d) + force);
                 }
+                std::cout << '\n';
             }
         }
+        
+        //for (auto iIt = m_Entities.begin(); iIt != iEnd; ++iIt) {
+        //    std::cout << "1. engine " << iIt->second->netGravitationalForce->getCoordinate(0) << '\n';
+        //    std::cout << "2. engine " << iIt->second->netGravitationalForce->getCoordinate(1) << '\n';
+        //    std::cout << '\n';
+        //}
     }
 }

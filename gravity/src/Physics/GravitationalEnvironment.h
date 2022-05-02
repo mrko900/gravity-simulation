@@ -4,11 +4,10 @@
 #include <map>
 
 namespace mrko900::gravity::physics {
-    class GravityField {
-    public:
-        MassPoint& massPoint;
+    struct GravityField {
+        MassPoint* massPoint;
         bool dynamic;
-        DynamicCoordinates& netGravitationalForce;
+        DynamicCoordinates* netGravitationalForce;
     };
 
     class GravitationalEnvironment {
