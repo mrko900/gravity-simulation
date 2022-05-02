@@ -43,5 +43,6 @@ namespace mrko900::gravity::app::win {
         static void onWmLButtonDown(HWND hWnd, LPARAM lParam);
         static void onWmRButtonDown(HWND hWnd, LPARAM lParam);
         static void onWmMButtonDown(HWND hWnd, LPARAM lParam);
+        static void onWmMouseWheel(HWND hWnd, WPARAM wParam);
     };
 }

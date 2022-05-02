@@ -9,6 +9,7 @@
 #include <chrono>
 #include "../UserInput.h"
 #include <stdexcept>
+#include <WindowsX.h>
 
 #undef VARNAME_GL_FUNCTIONS
 #define VARNAME_GL_FUNCTIONS glHelper
@@ -387,8 +388,8 @@ namespace mrko900::gravity::app::win {
         RECT clientRect;
         GetClientRect(hWnd, &clientRect);
         MouseClickInputData data = MouseClickInputData(
-            LOWORD(lParam),
-            clientRect.bottom - HIWORD(lParam),
+            GET_X_LPARAM(lParam),
+            clientRect.bottom - GET_Y_LPARAM(lParam),
             mouseButton
         );
         obj.m_ProgramLoop->userInput(MOUSE_PRESSED, &data);
@@ -404,6 +405,16 @@ namespace mrko900::gravity::app::win {
 
     void WinProgram::onWmMButtonDown(HWND hWnd, LPARAM lParam) {
         onWmMouseButtonDown(hWnd, lParam, MouseButton::MIDDLE);
+    }
+
+    void WinProgram::onWmMouseWheel(HWND hWnd, WPARAM wParam) {
+        WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
+        if (!obj.m_ProgramLoopRunning)
+            return;
+        short param = GET_WHEEL_DELTA_WPARAM(wParam);
+        param /= abs(param);
+        float data = param;
+        obj.m_ProgramLoop->userInput(MOUSE_WHEEL, &data);
     }
 
     LRESULT WinProgram::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -434,6 +445,10 @@ namespace mrko900::gravity::app::win {
             case WM_MBUTTONDOWN:
                 onWmMButtonDown(hWnd, lParam);
                 break;
+            case WM_MOUSEWHEEL:
+                onWmMouseWheel(hWnd, wParam);
+                break;
+
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
         }

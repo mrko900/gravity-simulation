@@ -100,6 +100,7 @@ namespace mrko900::gravity::app {
         struct Object {
             mrko900::gravity::graphics::AppearanceImpl appearance;
             mrko900::gravity::graphics::Circle circle;
+            float normalizedX, normalizedY;
             bool refresh;
         };
 
@@ -109,5 +110,8 @@ namespace mrko900::gravity::app {
                              const mrko900::gravity::graphics::Circle& circle);
         bool testRectangleClick(unsigned short clickX, unsigned short clickY,
                                 const mrko900::gravity::graphics::Rectangle& rectangle);
+
+        float m_WorldScale;
+        float m_OldWorldScale;
     };
 }

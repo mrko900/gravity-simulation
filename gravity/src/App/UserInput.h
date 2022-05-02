@@ -2,10 +2,11 @@
 
 namespace mrko900::gravity::app {
     enum class UserInput {
-        MOUSE_PRESSED,
-        MOUSE_RELEASED,
-        KEY_PRESSED,
-        KEY_RELEASED
+        MOUSE_PRESSED, // - MouseClickInputData
+        MOUSE_RELEASED, // - MouseClickInputData
+        KEY_PRESSED, // - KeyboardInputData
+        KEY_RELEASED, // - KeyboardInputData
+        MOUSE_WHEEL // - float
     };
 
     enum class MouseButton {

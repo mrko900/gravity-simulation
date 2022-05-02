@@ -42,10 +42,10 @@ namespace mrko900::gravity::app {
                 throw std::invalid_argument("function domain is [0, 2]");
             return t <= 1.0f 
                    ? (t * t * (3.0f - 2.0f * t)) 
-                   : ((t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 1);
+                   : ((t - 1.0f) * (t - 1.0f) * (2.0f * t - 5.0f) + 1.0f);
         }), m_MenuAnimBeginTime(time_point<std::chrono::high_resolution_clock>()),
         m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()), m_MenuAnimCompletion(0.0f),
-        m_CanSpawnObj(true) {
+        m_CanSpawnObj(true), m_WorldScale(1.0f), m_OldWorldScale(m_WorldScale) {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -168,12 +168,15 @@ namespace mrko900::gravity::app {
         m_LeftClickables.push_back([this] (unsigned short clickX, unsigned short clickY) {
             if (m_CanSpawnObj && !testRectangleClick(clickX, clickY, *m_Menu)) {
                 static unsigned int idd = 10; // todo
-                float x = weightX(2.0f * (float) clickX / (float) m_ViewportWidth - 1.0f);
-                float y = weightY(2.0f * (float) clickY / (float) m_ViewportHeight - 1.0f);
+                float normalizedX = 2.0f * (float) clickX / (float) m_ViewportWidth - 1.0f;
+                float normalizedY = 2.0f * (float) clickY / (float) m_ViewportHeight - 1.0f;
+                float x = weightX(normalizedX);
+                float y = weightY(normalizedY);
                 AppearanceAttribute attributes[] { FILL_COLOR };
                 bool revalidate = m_Objects.bucket_count() * m_Objects.max_load_factor() == m_Objects.size();
                 m_Objects.insert({ idd, Object {
-                    AppearanceImpl(attributes, 1), Circle { x, y, weightY(0.375f), nullptr, -2 }, false
+                    AppearanceImpl(attributes, 1), Circle { x, y, weightY(0.375f) * m_WorldScale, nullptr, -2 }, 
+                    normalizedX, normalizedY, false
                 } });
                 unsigned int myId = idd;
                 if (revalidate) {
@@ -361,6 +364,20 @@ namespace mrko900::gravity::app {
             }
         }
 
+        if (m_WorldScale != m_OldWorldScale) {
+            for (auto& entry : m_Objects) {
+                Object& object = entry.second;
+                float k = m_WorldScale / m_OldWorldScale;
+                object.normalizedX *= k;
+                object.normalizedY *= k;
+                object.circle.x = weightX(object.normalizedX);
+                object.circle.y = weightY(object.normalizedY);
+                object.circle.radius *= k;
+                refresh.insert(entry.first);
+            }
+            m_OldWorldScale = m_WorldScale;
+        }
+
         for (unsigned int id : refresh)
             m_Renderer.refreshFigure(id);
 
@@ -392,6 +409,10 @@ namespace mrko900::gravity::app {
             }
             for (auto& button : *clickables)
                 button(mouseClick.x, mouseClick.y);
+        } else if (input == MOUSE_WHEEL) {
+            float mouseWheelEvent = *((float*) data);
+            m_OldWorldScale = m_WorldScale;
+            m_WorldScale *= 1.0f + 0.1f * mouseWheelEvent;
         }
     }
 
