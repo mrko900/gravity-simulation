@@ -7,6 +7,7 @@ namespace mrko900::gravity::physics {
     class UniformForceSimulation : public ForceSimulation {
     public:
         void addEntity(unsigned int id, DynamicPoint& entity) override;
+        void replaceEntity(unsigned int id, DynamicPoint& entity) override;
         void removeEntity(unsigned int id) override;
         void simulate(float timeElapsed) override;
 

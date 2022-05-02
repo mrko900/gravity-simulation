@@ -45,9 +45,6 @@
     <ClCompile Include="src\Physics\VectorModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Physics\MassPoint.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Physics\ForceSimulation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

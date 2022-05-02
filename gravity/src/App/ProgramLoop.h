@@ -8,6 +8,9 @@
 #include <vector>
 #include <chrono>
 #include "../Graphics/AppearanceImpl.h"
+#include "../Physics/UniformForceSimulation.h"
+#include "../Physics/VectorModelImpl.h"
+#include "../Physics/DynamicCoordinatesImpl.h"
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -98,12 +101,22 @@ namespace mrko900::gravity::app {
         MenuState m_MenuState;
         std::function<float(float time)> m_MenuAnimDisplacementFunc;
 
+        struct PhysicalObject {
+            physics::DynamicCoordinatesImpl coordinates;
+            physics::DynamicCoordinatesImpl oldCoordinates;
+            physics::MassPoint massPoint;
+            physics::VectorModelImpl forces;
+            physics::DynamicCoordinatesImpl velocity;
+            physics::DynamicPoint dynamicPoint;
+        };
+
         struct Object {
             mrko900::gravity::graphics::AppearanceImpl appearance;
             mrko900::gravity::graphics::Circle circle;
             float normalizedX, normalizedY;
             bool refresh;
             float aspectRatio;
+            PhysicalObject physics;
         };
 
         std::unordered_map<unsigned int, Object> m_Objects;
@@ -113,12 +126,23 @@ namespace mrko900::gravity::app {
         bool testRectangleClick(unsigned short clickX, unsigned short clickY,
                                 const mrko900::gravity::graphics::Rectangle& rectangle);
 
+        float worldX(float normalizedX);
+        float worldY(float normalizedY, float ownAspectRatio);
+        float normalizedX(float worldX);
+        float normalizedY(float worldY, float ownAspectRatio);
+
         float m_WorldScale;
         float m_OldWorldScale;
 
+        bool m_PerspectiveXUpdateRequested;
+        bool m_PerspectiveYUpdateRequested;
         float m_PerspectiveChangeX;
         float m_PerspectiveChangeY;
+        float m_PerspectiveX;
+        float m_PerspectiveY;
 
         bool m_ChangingPerspective;
+
+        physics::UniformForceSimulation m_ForceSimulation;
     };
 }

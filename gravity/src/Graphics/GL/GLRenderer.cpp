@@ -173,7 +173,7 @@ namespace mrko900::gravity::graphics::gl {
     }
 
     void GLRenderer::replaceCircle(unsigned int id, Circle& circle) {
-        m_Figures[id].def.circleDef.origin = &circle;
+        m_Figures.at(id).def.circleDef.origin = &circle;
     }
 
     void GLRenderer::addRectangle(unsigned int id, Rectangle& rectangle) {

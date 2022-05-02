@@ -37,7 +37,6 @@
     <ClCompile Include="src\GL\GLHelper.cpp" />
     <ClCompile Include="src\GL\Win\WinGLAccess.cpp" />
     <ClCompile Include="src\Physics\ForceSimulation.cpp" />
-    <ClCompile Include="src\Physics\MassPoint.cpp" />
     <ClCompile Include="src\Physics\VectorModel.cpp" />
     <ClCompile Include="src\Physics\VectorModelImpl.cpp" />
   </ItemGroup>

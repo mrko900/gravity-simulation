@@ -18,6 +18,7 @@ using mrko900::gravity::graphics::Circle;
 using mrko900::gravity::graphics::Appearance;
 
 using namespace mrko900::gravity::graphics; // todo remove
+using namespace mrko900::gravity::physics; // todo remove
 
 using std::chrono::time_point;
 using std::chrono::duration;
@@ -47,7 +48,8 @@ namespace mrko900::gravity::app {
         m_MenuAnimPauseBeginTime(time_point<std::chrono::high_resolution_clock>()), m_MenuAnimCompletion(0.0f),
         m_CanSpawnObj(true), m_WorldScale(1.0f), m_OldWorldScale(m_WorldScale), 
         m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
-        m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f) {
+        m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
+        m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f) {
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -103,7 +105,7 @@ namespace mrko900::gravity::app {
                     ? RGBAColor { 1.0f, 0.0f, 0.0f, 1.0f }
                     : RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                 *statePtr = !*statePtr;
-                onClickCallback(true);
+                onClickCallback(*statePtr);
                 m_CanSpawnObj = false;
             }
         });
@@ -177,25 +179,48 @@ namespace mrko900::gravity::app {
                 AppearanceAttribute attributes[] { FILL_COLOR };
                 bool revalidate = m_Objects.bucket_count() * m_Objects.max_load_factor() == m_Objects.size();
                 m_Objects.insert({ idd, Object {
-                    AppearanceImpl(attributes, 1), 
-                    Circle { x, y, weightY(0.375f) * m_WorldScale * m_AspectRatio, nullptr, -2 }, 
-                    normalizedX, normalizedY, false, m_AspectRatio
+                    AppearanceImpl(attributes, 1),
+                    Circle { x, y, weightY(0.375f) * m_WorldScale * m_AspectRatio, nullptr, -2 },
+                    normalizedX, normalizedY, false, m_AspectRatio,
+                    PhysicalObject {
+                        DynamicCoordinatesImpl(),
+                        DynamicCoordinatesImpl(),
+                        MassPoint { 50.0f, nullptr },
+                        VectorModelImpl(2),
+                        DynamicCoordinatesImpl(),
+                        DynamicPoint {}
+                    }
                 } });
                 unsigned int myId = idd;
                 if (revalidate) {
-                    int i = 0;
                     for (auto& entry : m_Objects) {
                         if (entry.first == myId)
                             continue;
-                        m_Renderer.replaceCircle(entry.first, entry.second.circle);
-                        entry.second.circle.appearance = &entry.second.appearance;
-                        ++i;
+                        Object& object = entry.second;
+                        m_Renderer.replaceCircle(entry.first, object.circle);
+                        m_ForceSimulation.replaceEntity(entry.first, object.physics.dynamicPoint);
+                        object.circle.appearance = &entry.second.appearance;
+                        object.physics.massPoint.coordinates = &object.physics.coordinates;
+                        object.physics.dynamicPoint.massPoint = &object.physics.massPoint;
+                        object.physics.dynamicPoint.forceModel = &object.physics.forces;
+                        object.physics.dynamicPoint.velocity = &object.physics.velocity;
                     }
                 }
                 Object& me = m_Objects.at(myId);
                 me.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                 me.circle.appearance = &me.appearance;
+                me.physics.massPoint.coordinates = &me.physics.coordinates;
+                me.physics.dynamicPoint.massPoint = &me.physics.massPoint;
+                me.physics.dynamicPoint.forceModel = &me.physics.forces;
+                me.physics.dynamicPoint.velocity = &me.physics.velocity;
+                me.physics.coordinates.setCoordinate(0, worldX(me.normalizedX));
+                me.physics.coordinates.setCoordinate(1, worldY(me.normalizedY, me.aspectRatio));
+                me.physics.oldCoordinates.setCoordinate(0, me.physics.coordinates.getCoordinate(0));
+                me.physics.oldCoordinates.setCoordinate(1, me.physics.coordinates.getCoordinate(1));
+                me.physics.velocity.setCoordinate(0, 10.0f);
+                me.physics.velocity.setCoordinate(1, -10.0f);
                 m_Renderer.addCircle(idd, me.circle);
+                m_ForceSimulation.addEntity(idd, me.physics.dynamicPoint);
                 ++idd;
             } else
                 m_CanSpawnObj = true;
@@ -231,13 +256,13 @@ namespace mrko900::gravity::app {
                     && !testRectangleClick(clickX, clickY, *m_Menu)
                     && testCircleClick(clickX, clickY, it->second.circle)) {
                     m_Renderer.removeFigure(it->first);
+                    m_ForceSimulation.removeEntity(it->first);
                     erase = true;
                 } else {
                     erase = false;
                 }
-                if (erase) {
+                if (erase)
                     it = m_Objects.erase(it);
-                }
                 else
                     ++it;
             }
@@ -360,30 +385,23 @@ namespace mrko900::gravity::app {
                 m_MenuAnimCompletion = displacement;
         }
 
-        for (auto& entry : m_Objects) {
-            if (entry.second.refresh) {
-                refresh.insert(entry.first);
-                entry.second.refresh = false;
-            }
-        }
-
-        if (m_PerspectiveChangeX != 0.0f) {
+        if (m_PerspectiveXUpdateRequested) {
             for (auto& entry : m_Objects) {
                 Object& object = entry.second;
                 object.normalizedX += m_PerspectiveChangeX;
                 object.circle.x = weightX(object.normalizedX);
                 refresh.insert(entry.first);
             }
-            m_PerspectiveChangeX = 0.0f;
+            m_PerspectiveXUpdateRequested = false;
         }
-        if (m_PerspectiveChangeY != 0.0f) {
+        if (m_PerspectiveYUpdateRequested) {
             for (auto& entry : m_Objects) {
                 Object& object = entry.second;
-                object.normalizedY += m_PerspectiveChangeY;
+                object.normalizedY += m_PerspectiveChangeY * object.aspectRatio / m_AspectRatio;
                 object.circle.y = weightY(object.normalizedY) * m_AspectRatio / object.aspectRatio;
                 refresh.insert(entry.first);
             }
-            m_PerspectiveChangeY = 0.0f;
+            m_PerspectiveYUpdateRequested = false;
         }
 
         if (m_WorldScale != m_OldWorldScale) {
@@ -392,18 +410,63 @@ namespace mrko900::gravity::app {
                 float k = m_WorldScale / m_OldWorldScale;
                 object.normalizedX *= k;
                 object.normalizedY *= k;
-                object.circle.x = weightX(object.normalizedX);
-                object.circle.y = weightY(object.normalizedY) * m_AspectRatio / object.aspectRatio;
+                object.refresh = true;
                 object.circle.radius *= k;
                 refresh.insert(entry.first);
             }
             m_OldWorldScale = m_WorldScale;
         }
 
+        // physics
+        m_ForceSimulation.simulate(0.0001f);
+        for (auto& entry : m_Objects) {
+            Object& object = entry.second;
+            float newWorldX = object.physics.coordinates.getCoordinate(0);
+            float newWorldY = object.physics.coordinates.getCoordinate(1);
+            float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
+            float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
+            float worldDX = newWorldX - oldWorldX;
+            float worldDY = newWorldY - oldWorldY;
+            float normalizedDX = normalizedX(worldDX);
+            float normalizedDY = normalizedY(worldDY, object.aspectRatio);
+            object.normalizedX += normalizedDX;
+            object.normalizedY += normalizedDY;
+            object.physics.oldCoordinates.setCoordinate(0, newWorldX);
+            object.physics.oldCoordinates.setCoordinate(1, newWorldY);
+            object.refresh = true;
+        }
+        // end physics
+
+        for (auto& entry : m_Objects) {
+            Object& object = entry.second;
+            if (object.refresh) {
+                refresh.insert(entry.first);
+                object.circle.x = weightX(object.normalizedX);
+                object.circle.y = weightY(object.normalizedY) * m_AspectRatio / object.aspectRatio;
+                object.refresh = false;
+            }
+        }
+
         for (unsigned int id : refresh)
             m_Renderer.refreshFigure(id);
 
         m_Renderer.render();
+    }
+
+    float ProgramLoop::worldX(float normalizedX) {
+        return (normalizedX - m_PerspectiveX) / m_WorldScale;
+    }
+
+    float ProgramLoop::worldY(float normalizedY, float ownAspectRatio) {
+        return (normalizedY - m_PerspectiveY) / ownAspectRatio / m_WorldScale;
+    }
+
+    float ProgramLoop::normalizedX(float worldX) {
+        return worldX * m_WorldScale;
+    }
+
+    float ProgramLoop::normalizedY(float worldY, float ownAspectRatio) {
+        return worldY * m_WorldScale * ownAspectRatio;
     }
 
     void ProgramLoop::updateViewport(unsigned short newWidth, unsigned short newHeight) {
@@ -451,6 +514,10 @@ namespace mrko900::gravity::app {
                 float normalizedDY = abs((float) viewportDY / (float) m_ViewportHeight * 2.0f);
                 m_PerspectiveChangeX = kx * normalizedDX;
                 m_PerspectiveChangeY = ky * normalizedDY;
+                m_PerspectiveX += m_PerspectiveChangeX;
+                m_PerspectiveY += m_PerspectiveChangeY;
+                m_PerspectiveXUpdateRequested = true;
+                m_PerspectiveYUpdateRequested = true;
             }
         }
     }
