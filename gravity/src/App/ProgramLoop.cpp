@@ -202,7 +202,7 @@ namespace mrko900::gravity::app {
                         object.circle.appearance = &entry.second.appearance;
                         object.physics.massPoint.coordinates = &object.physics.coordinates;
                         object.physics.dynamicPoint.massPoint = &object.physics.massPoint;
-                        object.physics.dynamicPoint.forceModel = &object.physics.forces;
+                        object.physics.dynamicPoint.forceModel = &object.physics.forceModel;
                         object.physics.dynamicPoint.velocity = &object.physics.velocity;
                     }
                 }
@@ -211,14 +211,18 @@ namespace mrko900::gravity::app {
                 me.circle.appearance = &me.appearance;
                 me.physics.massPoint.coordinates = &me.physics.coordinates;
                 me.physics.dynamicPoint.massPoint = &me.physics.massPoint;
-                me.physics.dynamicPoint.forceModel = &me.physics.forces;
+                me.physics.dynamicPoint.forceModel = &me.physics.forceModel;
                 me.physics.dynamicPoint.velocity = &me.physics.velocity;
+                me.physics.forces.push_back(DynamicCoordinatesImpl());
+                me.physics.forces.back().setCoordinate(0, -100.0f);
+                me.physics.forces.back().setCoordinate(1, -100.0f);
+                me.physics.forceModel.addVector(0, me.physics.forces.at(0));
                 me.physics.coordinates.setCoordinate(0, worldX(me.normalizedX));
                 me.physics.coordinates.setCoordinate(1, worldY(me.normalizedY, me.aspectRatio));
                 me.physics.oldCoordinates.setCoordinate(0, me.physics.coordinates.getCoordinate(0));
                 me.physics.oldCoordinates.setCoordinate(1, me.physics.coordinates.getCoordinate(1));
-                me.physics.velocity.setCoordinate(0, 10.0f);
-                me.physics.velocity.setCoordinate(1, -10.0f);
+                me.physics.velocity.setCoordinate(0, 0.0f);
+                me.physics.velocity.setCoordinate(1, 0.0f);
                 m_Renderer.addCircle(idd, me.circle);
                 m_ForceSimulation.addEntity(idd, me.physics.dynamicPoint);
                 ++idd;

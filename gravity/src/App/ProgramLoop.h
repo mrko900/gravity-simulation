@@ -105,9 +105,10 @@ namespace mrko900::gravity::app {
             physics::DynamicCoordinatesImpl coordinates;
             physics::DynamicCoordinatesImpl oldCoordinates;
             physics::MassPoint massPoint;
-            physics::VectorModelImpl forces;
+            physics::VectorModelImpl forceModel;
             physics::DynamicCoordinatesImpl velocity;
             physics::DynamicPoint dynamicPoint;
+            std::vector<physics::DynamicCoordinatesImpl> forces;
         };
 
         struct Object {
