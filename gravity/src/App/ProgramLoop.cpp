@@ -274,6 +274,7 @@ namespace mrko900::gravity::app {
                     && testCircleClick(clickX, clickY, it->second.circle)) {
                     m_Renderer.removeFigure(it->first);
                     m_ForceSimulation.removeEntity(it->first);
+                    m_GravitationalEnvironment.removeEntity(it->first);
                     erase = true;
                 } else {
                     erase = false;
@@ -436,7 +437,7 @@ namespace mrko900::gravity::app {
 
         // physics
         m_ForceSimulation.simulate(0.00001f);
-        //m_GravitationalEnvironment.calculate();
+        m_GravitationalEnvironment.calculate();
         for (auto& entry : m_Objects) {
             Object& object = entry.second;
             float newWorldX = object.physics.coordinates.getCoordinate(0);
