@@ -12,6 +12,7 @@
 #include "../Physics/VectorModelImpl.h"
 #include "../Physics/DynamicCoordinatesImpl.h"
 #include "../Physics/GravitationalEnvironment.h"
+#include <chrono>
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -148,5 +149,7 @@ namespace mrko900::gravity::app {
 
         physics::UniformForceSimulation m_ForceSimulation;
         physics::GravitationalEnvironment m_GravitationalEnvironment;
+
+        std::chrono::time_point<std::chrono::high_resolution_clock> m_LastPhysUpdate;
     };
 }

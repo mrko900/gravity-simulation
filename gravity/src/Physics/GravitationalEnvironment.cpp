@@ -41,6 +41,7 @@ namespace mrko900::gravity::physics {
             for (auto jIt = iIt; jIt != m_Entities.end(); ++jIt) {
                 if (jIt->first == iIt->first)
                     continue;
+                std::cout << "Pair: " << iIt->first << " " << jIt->first << '\n';
                 DynamicCoordinates& iCoords = *iIt->second->massPoint->coordinates;
                 DynamicCoordinates& jCoords = *jIt->second->massPoint->coordinates;
                 float sqdist = 0.0f;

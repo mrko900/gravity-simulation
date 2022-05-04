@@ -50,7 +50,7 @@ namespace mrko900::gravity::app {
         m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
         m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
-        m_GravitationalEnvironment(1.0f)  {
+        m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()) { // todo dynamically
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -186,7 +186,7 @@ namespace mrko900::gravity::app {
                     PhysicalObject {
                         DynamicCoordinatesImpl(),
                         DynamicCoordinatesImpl(),
-                        MassPoint { 50.0f, nullptr },
+                        MassPoint { 500.0f , nullptr },
                         VectorModelImpl(2),
                         DynamicCoordinatesImpl(),
                         DynamicPoint {},
@@ -369,7 +369,7 @@ namespace mrko900::gravity::app {
         if (m_MenuState == MenuState::OPENING || m_MenuState == MenuState::CLOSING) {
             auto now = std::chrono::high_resolution_clock::now();
             auto timeDiff = now - m_MenuAnimBeginTime;
-            long microsTimeDiff = duration_cast<microseconds>(timeDiff).count();
+            int microsTimeDiff = duration_cast<microseconds>(timeDiff).count();
             float normalizedTimeDiff = (float) microsTimeDiff / 1'000'000.0f;
 
             if (m_MenuState == MenuState::OPENING && normalizedTimeDiff >= 1.0f) {
@@ -436,23 +436,30 @@ namespace mrko900::gravity::app {
         }
 
         // physics
-        m_ForceSimulation.simulate(0.00001f);
-        m_GravitationalEnvironment.calculate();
-        for (auto& entry : m_Objects) {
-            Object& object = entry.second;
-            float newWorldX = object.physics.coordinates.getCoordinate(0);
-            float newWorldY = object.physics.coordinates.getCoordinate(1);
-            float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
-            float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
-            float worldDX = newWorldX - oldWorldX;
-            float worldDY = newWorldY - oldWorldY;
-            float normalizedDX = normalizedX(worldDX);
-            float normalizedDY = normalizedY(worldDY, object.aspectRatio);
-            object.normalizedX += normalizedDX;
-            object.normalizedY += normalizedDY;
-            object.physics.oldCoordinates.setCoordinate(0, newWorldX);
-            object.physics.oldCoordinates.setCoordinate(1, newWorldY);
-            object.refresh = true;
+        time_point<high_resolution_clock> currentFrame = high_resolution_clock::now();
+        microseconds physicsUpdDiff = duration_cast<microseconds>(currentFrame - m_LastPhysUpdate);
+        if (physicsUpdDiff.count() > (int) (1e6 / 60)) {
+            m_GravitationalEnvironment.calculate();
+            m_ForceSimulation.simulate(1.0f / 60.0f);
+
+            for (auto& entry : m_Objects) {
+                Object& object = entry.second;
+                float newWorldX = object.physics.coordinates.getCoordinate(0);
+                float newWorldY = object.physics.coordinates.getCoordinate(1);
+                float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
+                float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
+                float worldDX = newWorldX - oldWorldX;
+                float worldDY = newWorldY - oldWorldY;
+                float normalizedDX = normalizedX(worldDX);
+                float normalizedDY = normalizedY(worldDY, object.aspectRatio);
+                object.normalizedX += normalizedDX;
+                object.normalizedY += normalizedDY;
+                object.physics.oldCoordinates.setCoordinate(0, newWorldX);
+                object.physics.oldCoordinates.setCoordinate(1, newWorldY);
+                object.refresh = true;
+            }
+
+            m_LastPhysUpdate = m_LastPhysUpdate + microseconds((int) (1e6 / 60));
         }
         // end physics
 
