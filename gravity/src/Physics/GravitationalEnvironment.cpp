@@ -50,49 +50,22 @@ namespace mrko900::gravity::physics {
                 float iMass = iIt->second->massPoint->mass;
                 float jMass = jIt->second->massPoint->mass;
                 float forceMagn = m_Coef * iMass * jMass / sqdist;
-                float k = forceMagn / sqrt(sqdist);
-                for (unsigned int d = 0; d < iCoords.dimensions(); ++d) {
-                    if (iIt->second->dynamic) {
-                        DynamicCoordinates& iNetGravitationalForce = *iIt->second->netGravitationalForce;
-                        float sign = iCoords.getCoordinate(d) > jCoords.getCoordinate(d) ? 1.0f : -1.0f;
-                        iNetGravitationalForce.setCoordinate(
-                            d, iNetGravitationalForce.getCoordinate(d) + sign * iCoords.getCoordinate(d) * k
-                        );
-                    }
 
-                    if (jIt->second->dynamic) {
-                        DynamicCoordinates& jNetGravitationalForce = *jIt->second->netGravitationalForce;
-                        float sign = iCoords.getCoordinate(d) > jCoords.getCoordinate(d) ? 1.0f : -1.0f;
-                        jNetGravitationalForce.setCoordinate(
-                            d, jNetGravitationalForce.getCoordinate(d) + sign * jCoords.getCoordinate(d) * k
-                        );
+                float k = forceMagn / sqrt(sqdist);
+
+                for (unsigned int d = 0; d < iCoords.dimensions(); ++d) {
+                    for (char c = 0; c < 2; ++c) {
+                        if (!(c == 0 ? iIt : jIt)->second->dynamic)
+                            continue;
+
+                        DynamicCoordinates& netGravForce = *(c == 0 ? iIt : jIt)->second->netGravitationalForce;
+                        DynamicCoordinates& myCoords = c == 0 ? iCoords : jCoords;
+                        DynamicCoordinates& theirCoords = c == 0 ? jCoords : iCoords;
+                        float signedDist = theirCoords.getCoordinate(d) - myCoords.getCoordinate(d);
+                        netGravForce.setCoordinate(d, netGravForce.getCoordinate(d) + signedDist * k);
                     }
                 }
-
-                //for (int d = 0; d < iIt->second->massPoint->coordinates->dimensions(); ++d) {
-                //    if (!iIt->second->dynamic && !jIt->second->dynamic)
-                //        continue;
-                //    float dist = abs(iIt->second->massPoint->coordinates->getCoordinate(d) 
-                //                     - jIt->second->massPoint->coordinates->getCoordinate(d));
-                //    float force = m_Coef * iIt->second->massPoint->mass * jIt->second->massPoint->mass
-                //                  / (dist * dist);
-                //    std::cout << d << ": " << force;
-                //    std::cout << ", ";
-                //    if (iIt->second->dynamic)
-                //        iIt->second->netGravitationalForce->setCoordinate(d, 
-                //            iIt->second->netGravitationalForce->getCoordinate(d) + force);
-                //    if (jIt->second->dynamic)
-                //        jIt->second->netGravitationalForce->setCoordinate(d, 
-                //            jIt->second->netGravitationalForce->getCoordinate(d) + force);
-                //}
-                //std::cout << '\n';
             }
         }
-        
-        //for (auto iIt = m_Entities.begin(); iIt != iEnd; ++iIt) {
-        //    std::cout << "1. engine " << iIt->second->netGravitationalForce->getCoordinate(0) << '\n';
-        //    std::cout << "2. engine " << iIt->second->netGravitationalForce->getCoordinate(1) << '\n';
-        //    std::cout << '\n';
-        //}
     }
 }
