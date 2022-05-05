@@ -151,5 +151,9 @@ namespace mrko900::gravity::app {
         physics::GravitationalEnvironment m_GravitationalEnvironment;
 
         std::chrono::time_point<std::chrono::high_resolution_clock> m_LastPhysUpdate;
+
+        bool m_PerformSimulation;
+        unsigned int m_SelectedObject;
+        bool m_NewObjectSelected;
     };
 }

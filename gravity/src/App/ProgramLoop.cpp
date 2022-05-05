@@ -50,7 +50,8 @@ namespace mrko900::gravity::app {
         m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
         m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
-        m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()) { // todo dynamically
+        m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
+        m_PerformSimulation(true) { // todo m_LastPhysUpdate
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -142,15 +143,7 @@ namespace mrko900::gravity::app {
 
         m_LeftClickables.push_back([this](unsigned short clickX, unsigned short clickY) {
             if (testCircleClick(clickX, clickY, *m_PlayButton)) {
-                m_PlayButton->appearance->getFillColor().g += 0.1f;
-                m_PlayButton->appearance->getFillColor().r -= 0.03f;
-                m_PlayButton->appearance->getFillColor().b += 0.15f;
-                if (m_PlayButton->appearance->getFillColor().g >= 1.0f)
-                    m_PlayButton->appearance->getFillColor().g -= 1.0f;
-                if (m_PlayButton->appearance->getFillColor().r <= 0.0f)
-                    m_PlayButton->appearance->getFillColor().r += 1.0f;
-                if (m_PlayButton->appearance->getFillColor().b >= 1.0f)
-                    m_PlayButton->appearance->getFillColor().b -= 1.0f;
+                m_PerformSimulation = !m_PerformSimulation;
                 m_CanSpawnObj = false;
             }
         });
@@ -169,16 +162,38 @@ namespace mrko900::gravity::app {
             }
         });
         
+        // object selection (important: should run before object spawning logic)
+        m_LeftClickables.push_back([this](unsigned short clickX, unsigned short clickY) {
+            for (const auto& i : m_Objects) {
+                if (m_CanSpawnObj
+                    && !testRectangleClick(clickX, clickY, *m_Menu)
+                    && testCircleClick(clickX, clickY, i.second.circle)) {
+                    if (m_SelectedObject != i.first) {
+                        m_SelectedObject = i.first;
+                        m_NewObjectSelected = true;
+                    }
+                    m_CanSpawnObj = false;
+                }
+            }
+        });
+
         // object spawning
         m_LeftClickables.push_back([this] (unsigned short clickX, unsigned short clickY) {
             if (m_CanSpawnObj && !testRectangleClick(clickX, clickY, *m_Menu)) {
-                static unsigned int idd = 10; // todo
+                static unsigned int idd = 10; // todo id system
+                
+                // screen coordinates of the new object
                 float normalizedX = 2.0f * (float) clickX / (float) m_ViewportWidth - 1.0f;
                 float normalizedY = 2.0f * (float) clickY / (float) m_ViewportHeight - 1.0f;
                 float x = weightX(normalizedX);
                 float y = weightY(normalizedY);
-                AppearanceAttribute attributes[] { FILL_COLOR };
+
+                AppearanceAttribute attributes[] { FILL_COLOR }; // object appearance attribs
+
+                // check if the map has resized itself and pointers became invalid
                 bool revalidate = m_Objects.bucket_count() * m_Objects.max_load_factor() == m_Objects.size();
+
+                // create and store a new object
                 m_Objects.insert({ idd, Object {
                     AppearanceImpl(attributes, 1),
                     Circle { x, y, weightY(0.375f) * m_WorldScale * m_AspectRatio, nullptr, -2 },
@@ -193,8 +208,11 @@ namespace mrko900::gravity::app {
                         GravityField { nullptr, true, nullptr }
                     }
                 } });
-                unsigned int myId = idd;
+
+                unsigned int myId = idd; // id of the new object
+
                 if (revalidate) {
+                    // update pointers to objects stored in the map if it has resized (since they now obsolete)
                     for (auto& entry : m_Objects) {
                         if (entry.first == myId)
                             continue;
@@ -212,32 +230,59 @@ namespace mrko900::gravity::app {
                         object.physics.forceModel.addVector(0, object.physics.forces.back());
                     }
                 }
-                Object& me = m_Objects.at(myId);
+
+                Object& me = m_Objects.at(myId); // newly spawned object
+
+                // set appearance for the new object
                 me.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                 me.circle.appearance = &me.appearance;
+
+                // set up coordinates pointer for the new object
                 me.physics.massPoint.coordinates = &me.physics.coordinates;
+
+                // set up the dynamic point of the new object
                 DynamicPoint& dynamicPoint = me.physics.dynamicPoint;
                 dynamicPoint.massPoint = &me.physics.massPoint;
                 dynamicPoint.forceModel = &me.physics.forceModel;
                 dynamicPoint.velocity = &me.physics.velocity;
-                me.physics.forces.push_back(DynamicCoordinatesImpl());
+
+                me.physics.forces.push_back(DynamicCoordinatesImpl()); // net gravitational force
+
+                // initialize gravitational force
                 me.physics.forces.back().setCoordinate(0, 0.0f);
                 me.physics.forces.back().setCoordinate(1, 0.0f);
+
+                // add gravitational force to the force model associated with the new object
                 me.physics.forceModel.addVector(0, me.physics.forces.back());
+
+                // set up physical coordinates for the new object
                 DynamicCoordinatesImpl& coordinates = me.physics.coordinates;
                 coordinates.setCoordinate(0, worldX(me.normalizedX));
                 coordinates.setCoordinate(1, worldY(me.normalizedY, me.aspectRatio));
                 DynamicCoordinatesImpl& oldCoordinates = me.physics.oldCoordinates;
                 oldCoordinates.setCoordinate(0, coordinates.getCoordinate(0));
                 oldCoordinates.setCoordinate(1, coordinates.getCoordinate(1));
+
+                // set up velocity for the new object
                 DynamicCoordinatesImpl& velocity = me.physics.velocity;
                 velocity.setCoordinate(0, 0.0f);
                 velocity.setCoordinate(1, 0.0f);
+
+                // set up gravity field pointers
                 me.physics.gravityField.massPoint = &me.physics.massPoint;
                 me.physics.gravityField.netGravitationalForce = &me.physics.forces.at(0);
+
+                // add the new object to renderer
                 m_Renderer.addCircle(idd, me.circle);
+
+                // add the new object to simulation
                 m_ForceSimulation.addEntity(idd, me.physics.dynamicPoint);
                 m_GravitationalEnvironment.addEntity(idd, me.physics.gravityField);
+
+                // select newly spawned object
+                m_SelectedObject = myId;
+                m_NewObjectSelected = true;
+
                 ++idd;
             } else
                 m_CanSpawnObj = true;
@@ -251,7 +296,9 @@ namespace mrko900::gravity::app {
             std::function<void(bool)>([](bool) {}));
         m_MenuLayout.massInputState = false;
         m_MenuLayout.massInputAppearance = initButton(5, m_MenuLayout.massInput, &m_MenuLayout.massInputState,
-            std::function<void(bool)>([](bool) {}));
+            std::function<void(bool)>([](bool mode) {
+                std::cout << "mass input: " << mode << '\n';
+            }));
         m_MenuLayout.xvelInputState = false;
         m_MenuLayout.xvelInputAppearance = initButton(6, m_MenuLayout.xvelInput, &m_MenuLayout.xvelInputState,
             std::function<void(bool)> ([](bool) {}));
@@ -275,6 +322,7 @@ namespace mrko900::gravity::app {
                     m_Renderer.removeFigure(it->first);
                     m_ForceSimulation.removeEntity(it->first);
                     m_GravitationalEnvironment.removeEntity(it->first);
+                    // erase object
                     erase = true;
                 } else {
                     erase = false;
@@ -436,32 +484,42 @@ namespace mrko900::gravity::app {
         }
 
         // physics
-        time_point<high_resolution_clock> currentFrame = high_resolution_clock::now();
-        microseconds physicsUpdDiff = duration_cast<microseconds>(currentFrame - m_LastPhysUpdate);
-        if (physicsUpdDiff.count() > (int) (1e6 / 60)) {
-            m_GravitationalEnvironment.calculate();
-            m_ForceSimulation.simulate(1.0f / 60.0f);
+        if (m_PerformSimulation) {
+            time_point<high_resolution_clock> currentFrame = high_resolution_clock::now();
+            microseconds physicsUpdDiff = duration_cast<microseconds>(currentFrame - m_LastPhysUpdate);
+            if (physicsUpdDiff.count() > (int) (1e6 / 60)) {
+                m_GravitationalEnvironment.calculate();
+                m_ForceSimulation.simulate(1.0f / 60.0f);
 
-            for (auto& entry : m_Objects) {
-                Object& object = entry.second;
-                float newWorldX = object.physics.coordinates.getCoordinate(0);
-                float newWorldY = object.physics.coordinates.getCoordinate(1);
-                float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
-                float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
-                float worldDX = newWorldX - oldWorldX;
-                float worldDY = newWorldY - oldWorldY;
-                float normalizedDX = normalizedX(worldDX);
-                float normalizedDY = normalizedY(worldDY, object.aspectRatio);
-                object.normalizedX += normalizedDX;
-                object.normalizedY += normalizedDY;
-                object.physics.oldCoordinates.setCoordinate(0, newWorldX);
-                object.physics.oldCoordinates.setCoordinate(1, newWorldY);
-                object.refresh = true;
+                for (auto& entry : m_Objects) {
+                    Object& object = entry.second;
+                    float newWorldX = object.physics.coordinates.getCoordinate(0);
+                    float newWorldY = object.physics.coordinates.getCoordinate(1);
+                    float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
+                    float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
+                    float worldDX = newWorldX - oldWorldX;
+                    float worldDY = newWorldY - oldWorldY;
+                    float normalizedDX = normalizedX(worldDX);
+                    float normalizedDY = normalizedY(worldDY, object.aspectRatio);
+                    object.normalizedX += normalizedDX;
+                    object.normalizedY += normalizedDY;
+                    object.physics.oldCoordinates.setCoordinate(0, newWorldX);
+                    object.physics.oldCoordinates.setCoordinate(1, newWorldY);
+                    object.refresh = true;
+                }
+
+                m_LastPhysUpdate = m_LastPhysUpdate + microseconds((int) (1e6 / 60)); // todo +=
             }
-
-            m_LastPhysUpdate = m_LastPhysUpdate + microseconds((int) (1e6 / 60));
         }
         // end physics
+
+        // object selection logic
+        if (m_NewObjectSelected) {
+            m_NewObjectSelected = false;
+
+            std::cout << "Object selected: " << m_SelectedObject << '\n';
+        }
+        // end object selection logic
 
         for (auto& entry : m_Objects) {
             Object& object = entry.second;
