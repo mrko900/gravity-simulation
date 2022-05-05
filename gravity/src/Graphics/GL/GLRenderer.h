@@ -78,6 +78,8 @@ namespace mrko900::gravity::graphics::gl {
         float m_CoordYBegin;
         float m_CoordYEnd;
 
+        unsigned short m_ViewportWidth;
+
         bool m_AutoGenLOD;
         unsigned int m_AutoGenLODAfter;
 

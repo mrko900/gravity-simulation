@@ -69,6 +69,10 @@ namespace mrko900::gravity::graphics::gl {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
 
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        m_ViewportWidth = viewport[2];
+
         std::cout << "gl error: " << glGetError() << '\n';
     }
 
@@ -89,14 +93,26 @@ namespace mrko900::gravity::graphics::gl {
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_CircleFragmentShaderProgram);
 
 #define circle figure.def.circleDef
-#define circleFillColor circle.origin->appearance->getFillColor()
+#define circleAppearance (*circle.origin->appearance)
+#define circleFillColor circleAppearance.getFillColor()
+#define circleOutline circleAppearance.getOutline()
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 0, circle.xRadius);
                 glProgramUniform1f(m_CircleFragmentShaderProgram, 1, circle.yRadius);
                 glProgramUniform2f(m_CircleFragmentShaderProgram, 2, circle.x, circle.y);
-                if (circle.origin->appearance->hasAttribute(FILL_COLOR)) {
+                if (circleAppearance.hasAttribute(FILL_COLOR)) {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 1);
                     glProgramUniform4f(m_CircleFragmentShaderProgram, 4, circleFillColor.r, 
                                        circleFillColor.g, circleFillColor.b, circleFillColor.a);
+                    if (circleAppearance.hasAttribute(OUTLINE)) {
+                        glProgramUniform1f(m_CircleFragmentShaderProgram, 6, 
+                            (float) circleOutline.width / (float) m_ViewportWidth);
+                        glProgramUniform4f(m_CircleFragmentShaderProgram, 7,
+                            circleOutline.color.r, circleOutline.color.g, circleOutline.color.b, circleOutline.color.a);
+                        glProgramUniform1ui(m_CircleFragmentShaderProgram, 5,
+                            circleOutline.mode == OutlineMode::INNER ? 1 : 2);
+                    } else {
+                        glProgramUniform1ui(m_CircleFragmentShaderProgram, 5, 0); // no outline
+                    }
                 } else if (circle.origin->appearance->hasAttribute(TEXTURE)) {
                     glProgramUniform1ui(m_CircleFragmentShaderProgram, 3, 2);
                     glBindTextureUnit(0, circle.texture);
@@ -104,7 +120,9 @@ namespace mrko900::gravity::graphics::gl {
                 glBindVertexBuffer(0, circle.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
+#undef circleAppearance
 #undef circleFillColor
+#undef circleOutline
             } else if (figure.type == RECTANGLE) {
                 glUseProgramStages(m_ProgramPipeline, GL_VERTEX_SHADER_BIT, m_RectVertexShaderProgram);
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_SimpleFragmentShaderProgram);
@@ -280,6 +298,7 @@ namespace mrko900::gravity::graphics::gl {
 
     void GLRenderer::viewport(unsigned short viewportWidth, unsigned short viewportHeight) {
         glViewport(0, 0, viewportWidth, viewportHeight);
+        m_ViewportWidth = viewportWidth;
     }
 
     void GLRenderer::coordinateSystem(float xBegin, float xEnd, float yBegin, float yEnd) {

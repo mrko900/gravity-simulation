@@ -188,14 +188,14 @@ namespace mrko900::gravity::app {
                 float x = weightX(normalizedX);
                 float y = weightY(normalizedY);
 
-                AppearanceAttribute attributes[] { FILL_COLOR }; // object appearance attribs
+                AppearanceAttribute attributes[] { FILL_COLOR, OUTLINE }; // object appearance attribs
 
                 // check if the map has resized itself and pointers became invalid
                 bool revalidate = m_Objects.bucket_count() * m_Objects.max_load_factor() == m_Objects.size();
 
                 // create and store a new object
                 m_Objects.insert({ idd, Object {
-                    AppearanceImpl(attributes, 1),
+                    AppearanceImpl(attributes, 2),
                     Circle { x, y, weightY(0.375f) * m_WorldScale * m_AspectRatio, nullptr, -2 },
                     normalizedX, normalizedY, false, m_AspectRatio,
                     PhysicalObject {
@@ -235,6 +235,10 @@ namespace mrko900::gravity::app {
 
                 // set appearance for the new object
                 me.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
+                Outline& myOutline = me.appearance.getOutline();
+                myOutline.mode = OutlineMode::INNER;
+                myOutline.width = 16;
+                myOutline.color = RGBAColor { 1.0f, 1.0f, 1.0f, 1.0f };
                 me.circle.appearance = &me.appearance;
 
                 // set up coordinates pointer for the new object
@@ -312,6 +316,9 @@ namespace mrko900::gravity::app {
         m_MenuLayout.gInputAppearance = initButton(9, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
             std::function<void(bool)> ([](bool) {}));
 
+        // todo: clickables order (able to remove object even when the menu button is pressed)
+
+        // object removal
         m_MiddleClickables.push_back([this](unsigned short clickX, unsigned short clickY) {
             auto it = m_Objects.begin();
             while (it != m_Objects.end()) {
@@ -516,8 +523,11 @@ namespace mrko900::gravity::app {
         // object selection logic
         if (m_NewObjectSelected) {
             m_NewObjectSelected = false;
-
-            std::cout << "Object selected: " << m_SelectedObject << '\n';
+            Object& object = m_Objects.at(m_SelectedObject);
+            Outline& outline = object.appearance.getOutline();
+            outline.width = 16;
+            refresh.insert(m_SelectedObject);
+            std::cout << "selected " << m_SelectedObject << '\n';
         }
         // end object selection logic
 
