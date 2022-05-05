@@ -31,6 +31,8 @@ using enum mrko900::gravity::app::UserInput;
 using enum mrko900::gravity::app::KeyboardInputData;
 using enum mrko900::gravity::graphics::AppearanceAttribute;
 
+static unsigned int objectOutline(unsigned short viewportWidth, float scale);
+
 namespace mrko900::gravity::app {
     ProgramLoop::ProgramLoop(mrko900::gravity::graphics::Renderer& renderer, 
                              CoordinateSystemHelper& coordinateSystemHelper,
@@ -337,6 +339,8 @@ namespace mrko900::gravity::app {
                     m_GravitationalEnvironment.removeEntity(it->first);
                     if (it->first == m_PrevSelectedObject)
                         m_PrevSelectedObjectValid = false;
+                    if (it->first == m_SelectedObject)
+                        m_SelectedObjectValid = false;
                     // erase object
                     erase = true;
                 } else {
@@ -531,7 +535,8 @@ namespace mrko900::gravity::app {
         // object selection logic
         if (m_NewObjectSelected) {
             if (m_SelectedObjectValid)
-                m_Objects.at(m_SelectedObject).appearance.getOutline().width = 16;
+                m_Objects.at(m_SelectedObject).appearance.getOutline().width = 
+                    objectOutline(m_ViewportWidth, m_WorldScale);
             if (m_PrevSelectedObjectValid)
                 m_Objects.at(m_PrevSelectedObject).appearance.getOutline().width = 0;
 
@@ -580,6 +585,11 @@ namespace mrko900::gravity::app {
         m_ViewportWidth = newWidth;
         m_ViewportHeight = newHeight;
         m_AspectRatio = (float) newWidth / (float) newHeight;
+
+        if (m_SelectedObjectValid) {
+            Object& object = m_Objects.at(m_SelectedObject);
+            object.appearance.getOutline().width = objectOutline(newWidth, m_WorldScale);
+        }
     }
 
     void ProgramLoop::userInput(UserInput input, void* data) {
@@ -609,6 +619,12 @@ namespace mrko900::gravity::app {
         } else if (input == MOUSE_WHEEL) {
             float mouseWheelEvent = *((float*) data);
             m_WorldScale *= 1.0f + 0.1f * mouseWheelEvent;
+            if (m_SelectedObjectValid) {
+                std::cout << "OH yeah it's of course valid!\n";
+                Object& object = m_Objects.at(m_SelectedObject);
+                object.appearance.getOutline().width = objectOutline(m_ViewportWidth, m_WorldScale);
+            }
+
         } else if (input == MOUSE_MOVE) {
             if (m_ChangingPerspective) {
                 const MouseMoveInputData& mouseMove = *((MouseMoveInputData*) data);
@@ -651,4 +667,8 @@ namespace mrko900::gravity::app {
             && weightedY > rectangle.y - halfHeight
             && weightedY < rectangle.y + halfHeight;
     }
+}
+
+static unsigned int objectOutline(unsigned short viewportWidth, float scale) {
+    return (float) viewportWidth / 30.0f * scale;
 }
