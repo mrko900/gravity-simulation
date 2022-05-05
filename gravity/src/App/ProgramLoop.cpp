@@ -51,7 +51,8 @@ namespace mrko900::gravity::app {
         m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
         m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
-        m_PerformSimulation(true) { // todo m_LastPhysUpdate
+        m_PerformSimulation(true), m_SelectedObject(0), m_PrevSelectedObject(0), m_SelectedObjectValid(false),
+        m_PrevSelectedObjectValid(false), m_NewObjectSelected(false) { // todo m_LastPhysUpdate
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -168,8 +169,12 @@ namespace mrko900::gravity::app {
                 if (m_CanSpawnObj
                     && !testRectangleClick(clickX, clickY, *m_Menu)
                     && testCircleClick(clickX, clickY, i.second.circle)) {
-                    if (m_SelectedObject != i.first) {
+                    if (m_SelectedObject != i.first || !m_SelectedObjectValid) {
                         m_SelectedObject = i.first;
+                        m_SelectedObjectValid = true;
+                        m_NewObjectSelected = true;
+                    } else {
+                        m_SelectedObjectValid = false;
                         m_NewObjectSelected = true;
                     }
                     m_CanSpawnObj = false;
@@ -237,7 +242,7 @@ namespace mrko900::gravity::app {
                 me.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                 Outline& myOutline = me.appearance.getOutline();
                 myOutline.mode = OutlineMode::INNER;
-                myOutline.width = 16;
+                myOutline.width = 0;
                 myOutline.color = RGBAColor { 1.0f, 1.0f, 1.0f, 1.0f };
                 me.circle.appearance = &me.appearance;
 
@@ -285,6 +290,7 @@ namespace mrko900::gravity::app {
 
                 // select newly spawned object
                 m_SelectedObject = myId;
+                m_SelectedObjectValid = true;
                 m_NewObjectSelected = true;
 
                 ++idd;
@@ -329,6 +335,8 @@ namespace mrko900::gravity::app {
                     m_Renderer.removeFigure(it->first);
                     m_ForceSimulation.removeEntity(it->first);
                     m_GravitationalEnvironment.removeEntity(it->first);
+                    if (it->first == m_PrevSelectedObject)
+                        m_PrevSelectedObjectValid = false;
                     // erase object
                     erase = true;
                 } else {
@@ -522,12 +530,16 @@ namespace mrko900::gravity::app {
 
         // object selection logic
         if (m_NewObjectSelected) {
-            m_NewObjectSelected = false;
-            Object& object = m_Objects.at(m_SelectedObject);
-            Outline& outline = object.appearance.getOutline();
-            outline.width = 16;
-            refresh.insert(m_SelectedObject);
+            if (m_SelectedObjectValid)
+                m_Objects.at(m_SelectedObject).appearance.getOutline().width = 16;
+            if (m_PrevSelectedObjectValid)
+                m_Objects.at(m_PrevSelectedObject).appearance.getOutline().width = 0;
+
             std::cout << "selected " << m_SelectedObject << '\n';
+
+            m_PrevSelectedObject = m_SelectedObject;
+            m_PrevSelectedObjectValid = m_SelectedObjectValid;
+            m_NewObjectSelected = false;
         }
         // end object selection logic
 

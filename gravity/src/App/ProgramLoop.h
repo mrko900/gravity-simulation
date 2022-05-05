@@ -154,6 +154,9 @@ namespace mrko900::gravity::app {
 
         bool m_PerformSimulation;
         unsigned int m_SelectedObject;
+        unsigned int m_PrevSelectedObject;
+        bool m_SelectedObjectValid;
+        bool m_PrevSelectedObjectValid;
         bool m_NewObjectSelected;
     };
 }
