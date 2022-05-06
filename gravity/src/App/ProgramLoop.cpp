@@ -54,7 +54,7 @@ namespace mrko900::gravity::app {
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
         m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
         m_PerformSimulation(true), m_SelectedObject(0), m_PrevSelectedObject(0), m_SelectedObjectValid(false),
-        m_PrevSelectedObjectValid(false), m_NewObjectSelected(false) { // todo m_LastPhysUpdate
+        m_PrevSelectedObjectValid(false), m_NewObjectSelected(false), m_MassInputActive(false), m_MassInput(0.0f) { // todo m_LastPhysUpdate
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -184,6 +184,42 @@ namespace mrko900::gravity::app {
             }
         });
 
+        m_MenuLayout.rect0state = false;
+        m_MenuLayout.rect0appearance = initButton(3, m_MenuLayout.rect0, &m_MenuLayout.rect0state,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.rect1state = false;
+        m_MenuLayout.rect1appearance = initButton(4, m_MenuLayout.rect1, &m_MenuLayout.rect1state,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.massInputState = false;
+        m_MenuLayout.massInputAppearance = initButton(5, m_MenuLayout.massInput, &m_MenuLayout.massInputState,
+            std::function<void(bool)>([this](bool mode) {
+                m_MassInputActive = mode;
+                if (!mode) {
+                    printf("> Set mass for obj %d: %d\n", m_SelectedObject, m_MassInput);
+                    
+                    Object& object = m_Objects.find(m_SelectedObject)->second;
+                    PhysicalObject& physics = object.physics;
+                    object.circle.radius *= sqrt((float) m_MassInput / physics.massPoint.mass);
+                    physics.massPoint.mass = (float) m_MassInput;
+                    object.refresh = true;
+
+                    m_MassInput = 0.0f;
+                }
+            })
+        );
+        m_MenuLayout.xvelInputState = false;
+        m_MenuLayout.xvelInputAppearance = initButton(6, m_MenuLayout.xvelInput, &m_MenuLayout.xvelInputState,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.yvelInputState = false;
+        m_MenuLayout.yvelInputAppearance = initButton(7, m_MenuLayout.yvelInput, &m_MenuLayout.yvelInputState,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.radiusInputState = false;
+        m_MenuLayout.radiusInputAppearance = initButton(8, m_MenuLayout.radiusInput, &m_MenuLayout.radiusInputState,
+            std::function<void(bool)>([](bool) {}));
+        m_MenuLayout.gInputState = false;
+        m_MenuLayout.gInputAppearance = initButton(9, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
+            std::function<void(bool)>([](bool) {}));
+
         // object spawning
         m_LeftClickables.push_back([this] (unsigned short clickX, unsigned short clickY) {
             if (m_CanSpawnObj && !testRectangleClick(clickX, clickY, *m_Menu)) {
@@ -208,7 +244,7 @@ namespace mrko900::gravity::app {
                     PhysicalObject {
                         DynamicCoordinatesImpl(),
                         DynamicCoordinatesImpl(),
-                        MassPoint { 500.0f , nullptr },
+                        MassPoint { 1000.0f , nullptr },
                         VectorModelImpl(2),
                         DynamicCoordinatesImpl(),
                         DynamicPoint {},
@@ -299,30 +335,6 @@ namespace mrko900::gravity::app {
             } else
                 m_CanSpawnObj = true;
         });
-
-        m_MenuLayout.rect0state = false;
-        m_MenuLayout.rect0appearance = initButton(3, m_MenuLayout.rect0, &m_MenuLayout.rect0state,
-            std::function<void(bool)>([](bool) {}));
-        m_MenuLayout.rect1state = false;
-        m_MenuLayout.rect1appearance = initButton(4, m_MenuLayout.rect1, &m_MenuLayout.rect1state,
-            std::function<void(bool)>([](bool) {}));
-        m_MenuLayout.massInputState = false;
-        m_MenuLayout.massInputAppearance = initButton(5, m_MenuLayout.massInput, &m_MenuLayout.massInputState,
-            std::function<void(bool)>([](bool mode) {
-                std::cout << "mass input: " << mode << '\n';
-            }));
-        m_MenuLayout.xvelInputState = false;
-        m_MenuLayout.xvelInputAppearance = initButton(6, m_MenuLayout.xvelInput, &m_MenuLayout.xvelInputState,
-            std::function<void(bool)> ([](bool) {}));
-        m_MenuLayout.yvelInputState = false;
-        m_MenuLayout.yvelInputAppearance = initButton(7, m_MenuLayout.yvelInput, &m_MenuLayout.yvelInputState,
-            std::function<void(bool)> ([](bool) {}));
-        m_MenuLayout.radiusInputState = false;
-        m_MenuLayout.radiusInputAppearance = initButton(8, m_MenuLayout.radiusInput, &m_MenuLayout.radiusInputState,
-            std::function<void(bool)> ([](bool) {}));
-        m_MenuLayout.gInputState = false;
-        m_MenuLayout.gInputAppearance = initButton(9, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
-            std::function<void(bool)> ([](bool) {}));
 
         // todo: clickables order (able to remove object even when the menu button is pressed)
 
@@ -502,13 +514,15 @@ namespace mrko900::gravity::app {
             m_OldWorldScale = m_WorldScale;
         }
 
+        constexpr float targetPhysUpdRate = 60.0f;
+
         // physics
+        time_point<high_resolution_clock> currentFrame = high_resolution_clock::now();
         if (m_PerformSimulation) {
-            time_point<high_resolution_clock> currentFrame = high_resolution_clock::now();
             microseconds physicsUpdDiff = duration_cast<microseconds>(currentFrame - m_LastPhysUpdate);
-            if (physicsUpdDiff.count() > (int) (1e6 / 60)) {
+            if (physicsUpdDiff.count() > (int) (1.0e6f / targetPhysUpdRate)) {
                 m_GravitationalEnvironment.calculate();
-                m_ForceSimulation.simulate(1.0f / 60.0f);
+                m_ForceSimulation.simulate(1.0f / targetPhysUpdRate);
 
                 for (auto& entry : m_Objects) {
                     Object& object = entry.second;
@@ -527,12 +541,14 @@ namespace mrko900::gravity::app {
                     object.refresh = true;
                 }
 
-                m_LastPhysUpdate = m_LastPhysUpdate + microseconds((int) (1e6 / 60)); // todo +=
+                m_LastPhysUpdate += microseconds((int) (1.0e6f / targetPhysUpdRate));
             }
+        } else {
+            m_LastPhysUpdate = currentFrame;
         }
         // end physics
 
-        // object selection logic
+        // object selection
         if (m_NewObjectSelected) {
             if (m_SelectedObjectValid)
                 m_Objects.at(m_SelectedObject).appearance.getOutline().width = 
@@ -540,13 +556,11 @@ namespace mrko900::gravity::app {
             if (m_PrevSelectedObjectValid)
                 m_Objects.at(m_PrevSelectedObject).appearance.getOutline().width = 0;
 
-            std::cout << "selected " << m_SelectedObject << '\n';
-
             m_PrevSelectedObject = m_SelectedObject;
             m_PrevSelectedObjectValid = m_SelectedObjectValid;
             m_NewObjectSelected = false;
         }
-        // end object selection logic
+        // end object selection
 
         for (auto& entry : m_Objects) {
             Object& object = entry.second;
@@ -620,11 +634,9 @@ namespace mrko900::gravity::app {
             float mouseWheelEvent = *((float*) data);
             m_WorldScale *= 1.0f + 0.1f * mouseWheelEvent;
             if (m_SelectedObjectValid) {
-                std::cout << "OH yeah it's of course valid!\n";
                 Object& object = m_Objects.at(m_SelectedObject);
                 object.appearance.getOutline().width = objectOutline(m_ViewportWidth, m_WorldScale);
             }
-
         } else if (input == MOUSE_MOVE) {
             if (m_ChangingPerspective) {
                 const MouseMoveInputData& mouseMove = *((MouseMoveInputData*) data);
@@ -640,6 +652,51 @@ namespace mrko900::gravity::app {
                 m_PerspectiveY += m_PerspectiveChangeY;
                 m_PerspectiveXUpdateRequested = true;
                 m_PerspectiveYUpdateRequested = true;
+            }
+        } else if (input == KEY_PRESSED) {
+            if (m_MassInputActive) {
+                const KeyboardInputData& keyboardInput = *((KeyboardInputData*) data);
+                switch (keyboardInput) {
+                    case KEY_0:
+                        m_MassInput *= 10;
+                        break;
+                    case KEY_1:
+                        m_MassInput *= 10;
+                        m_MassInput += 1;
+                        break;
+                    case KEY_2:
+                        m_MassInput *= 10;
+                        m_MassInput += 2;
+                        break;
+                    case KEY_3:
+                        m_MassInput *= 10;
+                        m_MassInput += 3;
+                        break;
+                    case KEY_4:
+                        m_MassInput *= 10;
+                        m_MassInput += 4;
+                        break;
+                    case KEY_5:
+                        m_MassInput *= 10;
+                        m_MassInput += 5;
+                        break;
+                    case KEY_6:
+                        m_MassInput *= 10;
+                        m_MassInput += 6;
+                        break;
+                    case KEY_7:
+                        m_MassInput *= 10;
+                        m_MassInput += 7;
+                        break;
+                    case KEY_8:
+                        m_MassInput *= 10;
+                        m_MassInput += 8;
+                        break;
+                    case KEY_9:
+                        m_MassInput *= 10;
+                        m_MassInput += 9;
+                        break;
+                }
             }
         }
     }

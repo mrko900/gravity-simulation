@@ -30,6 +30,8 @@ using mrko900::gravity::graphics::Appearance;
 using enum mrko900::gravity::gl::GLHelper::Function;
 using enum mrko900::gravity::app::UserInput;
 
+static std::unordered_map<unsigned int, mrko900::gravity::app::KeyboardInputData> newKeyMap();
+
 namespace mrko900::gravity::app::win {
     static std::string readFile(const std::string& path) {
         std::ifstream inputStream;
@@ -368,10 +370,14 @@ namespace mrko900::gravity::app::win {
 
     void WinProgram::onWmKey(HWND hWnd, WPARAM wParam, UserInput ui) {
         WinProgram& obj = *((WinProgram*) GetWindowLongPtrW(hWnd, OBJ_WINDOW_LONG_PTR_INDEX));
+
         if (!obj.m_ProgramLoopRunning)
             return;
-        if (wParam == VK_SPACE) {
-            KeyboardInputData data = KeyboardInputData::SPACE;
+
+        std::unordered_map<unsigned int, KeyboardInputData> keyMap = newKeyMap();
+
+        if (keyMap.contains(wParam)) {
+            KeyboardInputData data = keyMap[wParam];
             obj.m_ProgramLoop->userInput(ui, &data);
         }
     }
@@ -499,4 +505,21 @@ namespace mrko900::gravity::app::win {
         }
         return 0;
     }
+}
+
+static std::unordered_map<unsigned int, mrko900::gravity::app::KeyboardInputData> newKeyMap() {
+    using enum mrko900::gravity::app::KeyboardInputData;
+    return {
+        { VK_SPACE, KEY_SPACE },
+        { 0x30, KEY_0 },
+        { 0x31, KEY_1 },
+        { 0x32, KEY_2 },
+        { 0x33, KEY_3 },
+        { 0x34, KEY_4 },
+        { 0x35, KEY_5 },
+        { 0x36, KEY_6 },
+        { 0x37, KEY_7 },
+        { 0x38, KEY_8 },
+        { 0x39, KEY_9 },
+    };
 }
