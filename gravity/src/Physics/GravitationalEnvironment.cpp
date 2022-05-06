@@ -42,7 +42,7 @@ namespace mrko900::gravity::physics {
                 if (jIt->first == iIt->first)
                     continue;
 
-                //std::cout << "Pair: " << jIt->first << " and " << iIt->first << '\n';
+                std::cout << "Pair: " << iIt->first << " and " << jIt->first << '\n';
 
                 DynamicCoordinates& iCoords = *iIt->second->massPoint->coordinates;
                 DynamicCoordinates& jCoords = *jIt->second->massPoint->coordinates;
@@ -53,6 +53,11 @@ namespace mrko900::gravity::physics {
                 float iMass = iIt->second->massPoint->mass;
                 float jMass = jIt->second->massPoint->mass;
                 float forceMagn = m_Coef * iMass * jMass / sqdist;
+
+                std::cout << "i location: " << iCoords.getCoordinate(0) << ' ' << iCoords.getCoordinate(1) << '\n';
+                std::cout << "j location: " << jCoords.getCoordinate(0) << ' ' << jCoords.getCoordinate(1) << '\n';
+
+                std::cout << "force: " << forceMagn << '\n';
 
                 float k = forceMagn / sqrt(sqdist);
 
@@ -68,6 +73,8 @@ namespace mrko900::gravity::physics {
                         netGravForce.setCoordinate(d, netGravForce.getCoordinate(d) + signedDist * k);
                     }
                 }
+
+                std::cout << "End pair\n\n";
             }
         }
     }
