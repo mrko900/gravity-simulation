@@ -202,7 +202,9 @@ namespace mrko900::gravity::app {
 
                     Object& object = m_Objects.find(m_SelectedObject)->second;
                     PhysicalObject& physics = object.physics;
-                    object.circle.radius *= sqrt((float) m_Input / physics.massPoint.mass);
+                    object.circle.radius *= sqrt(abs((float) m_Input / physics.massPoint.mass));
+                    if (m_Input < 0.0f)
+                        object.appearance.getFillColor() = RGBAColor { 1.0f, 0.0f, 0.0f, 1.0f };
                     physics.massPoint.mass = (float) m_Input;
                     object.refresh = true;
 
@@ -400,8 +402,7 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::interpretInput() {
-        if (m_InputFractional)
-            m_Input /= m_InputDiv;
+        m_Input /= m_InputDiv;
     }
 
     void ProgramLoop::resetInput() {
@@ -741,6 +742,11 @@ namespace mrko900::gravity::app {
                         break;
                     case KEY_PERIOD:
                         m_InputFractional = true;
+                        inputDivUpd = false;
+                        break;
+                    case KEY_MINUS:
+                        m_InputDiv *= -1.0f;
+                        break;
                     default:
                         inputDivUpd = false;
                         break;

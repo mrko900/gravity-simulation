@@ -269,7 +269,7 @@ namespace mrko900::gravity::app::win {
             std::chrono::steady_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
             if (currentTime - secondStart > std::chrono::seconds(1)) {
                 secondStart = currentTime;
-                std::cout << "fps: " << frames << '\n';
+                //std::cout << "fps: " << frames << '\n';
                 frames = 0;
             }
 
@@ -521,6 +521,7 @@ static std::unordered_map<unsigned int, mrko900::gravity::app::KeyboardInputData
         { 0x37, KEY_7 },
         { 0x38, KEY_8 },
         { 0x39, KEY_9 },
-        { VK_OEM_PERIOD, KEY_PERIOD }
+        { VK_OEM_PERIOD, KEY_PERIOD },
+        { VK_OEM_MINUS, KEY_MINUS }
     };
 }
