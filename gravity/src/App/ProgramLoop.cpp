@@ -205,6 +205,8 @@ namespace mrko900::gravity::app {
                     object.circle.radius *= sqrt(abs((float) m_Input / physics.massPoint.mass));
                     if (m_Input < 0.0f)
                         object.appearance.getFillColor() = RGBAColor { 1.0f, 0.0f, 0.0f, 1.0f };
+                    else
+                        object.appearance.getFillColor() = RGBAColor { 0.0f, 1.0f, 0.0f, 1.0f };
                     physics.massPoint.mass = (float) m_Input;
                     object.refresh = true;
 
