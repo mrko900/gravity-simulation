@@ -54,7 +54,8 @@ namespace mrko900::gravity::app {
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
         m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
         m_PerformSimulation(true), m_SelectedObject(0), m_PrevSelectedObject(0), m_SelectedObjectValid(false),
-        m_PrevSelectedObjectValid(false), m_NewObjectSelected(false), m_MassInputActive(false), m_MassInput(0.0f) { // todo m_LastPhysUpdate
+        m_PrevSelectedObjectValid(false), m_NewObjectSelected(false), m_InputActive(false), m_Input(0.0f),
+        m_InputFractional(false), m_InputDiv(1.0f), m_Menu(nullptr) { // todo m_LastPhysUpdate
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -193,26 +194,56 @@ namespace mrko900::gravity::app {
         m_MenuLayout.massInputState = false;
         m_MenuLayout.massInputAppearance = initButton(5, m_MenuLayout.massInput, &m_MenuLayout.massInputState,
             std::function<void(bool)>([this](bool mode) {
-                m_MassInputActive = mode;
+                m_InputActive = mode;
                 if (!mode) {
-                    printf("> Set mass for obj %d: %d\n", m_SelectedObject, m_MassInput);
-                    
+                    interpretInput();
+
+                    printf("> Set mass for obj %d: %f\n", m_SelectedObject, m_Input);
+
                     Object& object = m_Objects.find(m_SelectedObject)->second;
                     PhysicalObject& physics = object.physics;
-                    object.circle.radius *= sqrt((float) m_MassInput / physics.massPoint.mass);
-                    physics.massPoint.mass = (float) m_MassInput;
+                    object.circle.radius *= sqrt((float) m_Input / physics.massPoint.mass);
+                    physics.massPoint.mass = (float) m_Input;
                     object.refresh = true;
 
-                    m_MassInput = 0.0f;
+                    resetInput();
                 }
             })
         );
         m_MenuLayout.xvelInputState = false;
         m_MenuLayout.xvelInputAppearance = initButton(6, m_MenuLayout.xvelInput, &m_MenuLayout.xvelInputState,
-            std::function<void(bool)>([](bool) {}));
+            std::function<void(bool)>([this](bool mode) {
+                m_InputActive = mode;
+                if (!mode) {
+                    interpretInput();
+
+                    printf("> Set horizontal velocity for obj %d: %f\n", m_SelectedObject, m_Input);
+
+                    Object& object = m_Objects.find(m_SelectedObject)->second;
+                    PhysicalObject& physics = object.physics;
+                    physics.velocity.setCoordinate(0, (float) m_Input);
+
+                    resetInput();
+                }
+            })
+        );
         m_MenuLayout.yvelInputState = false;
         m_MenuLayout.yvelInputAppearance = initButton(7, m_MenuLayout.yvelInput, &m_MenuLayout.yvelInputState,
-            std::function<void(bool)>([](bool) {}));
+            std::function<void(bool)>([this](bool mode) {
+                m_InputActive = mode;
+                if (!mode) {
+                    interpretInput();
+
+                    printf("> Set vertical velocity for obj %d: %f\n", m_SelectedObject, m_Input);
+
+                    Object& object = m_Objects.find(m_SelectedObject)->second;
+                    PhysicalObject& physics = object.physics;
+                    physics.velocity.setCoordinate(1, (float) m_Input);
+
+                    resetInput();
+                }
+            })
+        );
         m_MenuLayout.radiusInputState = false;
         m_MenuLayout.radiusInputAppearance = initButton(8, m_MenuLayout.radiusInput, &m_MenuLayout.radiusInputState,
             std::function<void(bool)>([](bool) {}));
@@ -366,6 +397,17 @@ namespace mrko900::gravity::app {
         });
 
         m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;
+    }
+
+    void ProgramLoop::interpretInput() {
+        if (m_InputFractional)
+            m_Input /= m_InputDiv;
+    }
+
+    void ProgramLoop::resetInput() {
+        m_Input = 0.0f;
+        m_InputFractional = false;
+        m_InputDiv = 1.0f;
     }
 
     void ProgramLoop::run() {
@@ -654,48 +696,57 @@ namespace mrko900::gravity::app {
                 m_PerspectiveYUpdateRequested = true;
             }
         } else if (input == KEY_PRESSED) {
-            if (m_MassInputActive) {
+            if (m_InputActive) {
                 const KeyboardInputData& keyboardInput = *((KeyboardInputData*) data);
+                bool inputDivUpd = true;
                 switch (keyboardInput) {
                     case KEY_0:
-                        m_MassInput *= 10;
+                        m_Input *= 10.0f;
                         break;
                     case KEY_1:
-                        m_MassInput *= 10;
-                        m_MassInput += 1;
+                        m_Input *= 10.0f;
+                        m_Input += 1.0f;
                         break;
                     case KEY_2:
-                        m_MassInput *= 10;
-                        m_MassInput += 2;
+                        m_Input *= 10.0f;
+                        m_Input += 2.0f;
                         break;
                     case KEY_3:
-                        m_MassInput *= 10;
-                        m_MassInput += 3;
+                        m_Input *= 10.0f;
+                        m_Input += 3.0f;
                         break;
                     case KEY_4:
-                        m_MassInput *= 10;
-                        m_MassInput += 4;
+                        m_Input *= 10.0f;
+                        m_Input += 4.0f;
                         break;
                     case KEY_5:
-                        m_MassInput *= 10;
-                        m_MassInput += 5;
+                        m_Input *= 10.0f;
+                        m_Input += 5.0f;
                         break;
                     case KEY_6:
-                        m_MassInput *= 10;
-                        m_MassInput += 6;
+                        m_Input *= 10.0f;
+                        m_Input += 6.0f;
                         break;
                     case KEY_7:
-                        m_MassInput *= 10;
-                        m_MassInput += 7;
+                        m_Input *= 10.0f;
+                        m_Input += 7.0f;
                         break;
                     case KEY_8:
-                        m_MassInput *= 10;
-                        m_MassInput += 8;
+                        m_Input *= 10.0f;
+                        m_Input += 8.0f;
                         break;
                     case KEY_9:
-                        m_MassInput *= 10;
-                        m_MassInput += 9;
+                        m_Input *= 10.0f;
+                        m_Input += 9.0f;
                         break;
+                    case KEY_PERIOD:
+                        m_InputFractional = true;
+                    default:
+                        inputDivUpd = false;
+                        break;
+                }
+                if (inputDivUpd && m_InputFractional) {
+                    m_InputDiv *= 10.0f;
                 }
             }
         }

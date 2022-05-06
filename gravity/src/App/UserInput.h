@@ -21,7 +21,7 @@ namespace mrko900::gravity::app {
     };
 
     enum class KeyboardInputData {
-        KEY_SPACE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0
+        KEY_SPACE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_PERIOD
     };
 
     struct MouseMoveInputData {

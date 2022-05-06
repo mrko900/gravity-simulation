@@ -521,5 +521,6 @@ static std::unordered_map<unsigned int, mrko900::gravity::app::KeyboardInputData
         { 0x37, KEY_7 },
         { 0x38, KEY_8 },
         { 0x39, KEY_9 },
+        { VK_OEM_PERIOD, KEY_PERIOD }
     };
 }

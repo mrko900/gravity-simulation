@@ -159,7 +159,12 @@ namespace mrko900::gravity::app {
         bool m_PrevSelectedObjectValid;
         bool m_NewObjectSelected;
 
-        bool m_MassInputActive;
-        int m_MassInput;
+        bool m_InputActive;
+
+        float m_Input;
+        bool m_InputFractional;
+        float m_InputDiv;
+        void interpretInput();
+        void resetInput();
     };
 }
