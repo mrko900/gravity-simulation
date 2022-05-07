@@ -530,7 +530,7 @@ namespace mrko900::gravity::app {
         if (m_PerspectiveXUpdateRequested) {
             for (auto& entry : m_Objects) {
                 Object& object = entry.second;
-                object.normalizedX += m_PerspectiveChangeX;
+                object.normalizedX -= m_PerspectiveChangeX;
                 object.circle.x = weightX(object.normalizedX);
                 refresh.insert(entry.first);
             }
@@ -539,7 +539,7 @@ namespace mrko900::gravity::app {
         if (m_PerspectiveYUpdateRequested) {
             for (auto& entry : m_Objects) {
                 Object& object = entry.second;
-                object.normalizedY += m_PerspectiveChangeY * object.aspectRatio / m_AspectRatio;
+                object.normalizedY -= m_PerspectiveChangeY * object.aspectRatio / m_AspectRatio;
                 object.circle.y = weightY(object.normalizedY) * m_AspectRatio / object.aspectRatio;
                 refresh.insert(entry.first);
             }
@@ -547,9 +547,11 @@ namespace mrko900::gravity::app {
         }
 
         if (m_WorldScale != m_OldWorldScale) {
+            float k = m_WorldScale / m_OldWorldScale;
+            m_PerspectiveX *= k;
+            m_PerspectiveY *= k;
             for (auto& entry : m_Objects) {
                 Object& object = entry.second;
-                float k = m_WorldScale / m_OldWorldScale;
                 object.normalizedX *= k;
                 object.normalizedY *= k;
                 object.refresh = true;
@@ -577,10 +579,8 @@ namespace mrko900::gravity::app {
                     float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
                     float worldDX = newWorldX - oldWorldX;
                     float worldDY = newWorldY - oldWorldY;
-                    float normalizedDX = normalizedX(worldDX);
-                    float normalizedDY = normalizedY(worldDY, object.aspectRatio);
-                    object.normalizedX += normalizedDX;
-                    object.normalizedY += normalizedDY;
+                    object.normalizedX += normalizedDX(worldDX);
+                    object.normalizedY += normalizedDY(worldDY, object.aspectRatio);
                     object.physics.oldCoordinates.setCoordinate(0, newWorldX);
                     object.physics.oldCoordinates.setCoordinate(1, newWorldY);
                     object.refresh = true;
@@ -624,19 +624,19 @@ namespace mrko900::gravity::app {
     }
 
     float ProgramLoop::worldX(float normalizedX) {
-        return (normalizedX - m_PerspectiveX) / m_WorldScale;
+        return (normalizedX + m_PerspectiveX) / m_WorldScale;
     }
 
     float ProgramLoop::worldY(float normalizedY, float ownAspectRatio) {
-        return (normalizedY - m_PerspectiveY) / ownAspectRatio / m_WorldScale;
+        return (normalizedY + m_PerspectiveY) / ownAspectRatio / m_WorldScale;
     }
 
-    float ProgramLoop::normalizedX(float worldX) {
-        return worldX * m_WorldScale;
+    float ProgramLoop::normalizedDX(float worldDX) {
+        return worldDX * m_WorldScale;
     }
 
-    float ProgramLoop::normalizedY(float worldY, float ownAspectRatio) {
-        return worldY * m_WorldScale * ownAspectRatio;
+    float ProgramLoop::normalizedDY(float worldDY, float ownAspectRatio) {
+        return worldDY * m_WorldScale * ownAspectRatio;
     }
 
     void ProgramLoop::updateViewport(unsigned short newWidth, unsigned short newHeight) {
@@ -687,8 +687,8 @@ namespace mrko900::gravity::app {
                 const MouseMoveInputData& mouseMove = *((MouseMoveInputData*) data);
                 short viewportDX = abs(mouseMove.toX - mouseMove.fromX);
                 short viewportDY = abs(mouseMove.toY - mouseMove.fromY);
-                float kx = mouseMove.toX > mouseMove.fromX ? 1.0f : -1.0f;
-                float ky = mouseMove.toY > mouseMove.fromY ? 1.0f : -1.0f;
+                float kx = mouseMove.toX > mouseMove.fromX ? -1.0f : 1.0f;
+                float ky = mouseMove.toY > mouseMove.fromY ? -1.0f : 1.0f;
                 float normalizedDX = abs((float) viewportDX / (float) m_ViewportWidth * 2.0f);
                 float normalizedDY = abs((float) viewportDY / (float) m_ViewportHeight * 2.0f);
                 m_PerspectiveChangeX = kx * normalizedDX;

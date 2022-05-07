@@ -132,8 +132,8 @@ namespace mrko900::gravity::app {
 
         float worldX(float normalizedX);
         float worldY(float normalizedY, float ownAspectRatio);
-        float normalizedX(float worldX);
-        float normalizedY(float worldY, float ownAspectRatio);
+        float normalizedDX(float worldDX);
+        float normalizedDY(float worldDY, float ownAspectRatio);
 
         float m_WorldScale;
         float m_OldWorldScale;
