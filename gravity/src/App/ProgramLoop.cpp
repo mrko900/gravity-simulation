@@ -255,6 +255,20 @@ namespace mrko900::gravity::app {
         m_MenuLayout.gInputAppearance = initButton(9, m_MenuLayout.gInput, &m_MenuLayout.gInputState,
             std::function<void(bool)>([](bool) {}));
 
+        m_MenuLayout.xposInputState = false;
+        m_MenuLayout.xposInputAppearance = initButton(10, m_MenuLayout.xposInput, &m_MenuLayout.xposInputState,
+            std::function<void(bool)>([](bool mode) {
+                std::cout << "xpos input\n";
+            })
+        );
+
+        m_MenuLayout.yposInputState = false;
+        m_MenuLayout.yposInputAppearance = initButton(11, m_MenuLayout.yposInput, &m_MenuLayout.yposInputState,
+            std::function<void(bool)>([](bool mode) {
+                std::cout << "ypos input\n";
+            })
+        );
+
         // object spawning
         m_LeftClickables.push_back([this] (unsigned short clickX, unsigned short clickY) {
             if (m_CanSpawnObj && !testRectangleClick(clickX, clickY, *m_Menu)) {
@@ -475,13 +489,25 @@ namespace mrko900::gravity::app {
             m_MenuLayout.gInput.width = m_Menu->width - weightY(0.2f);
             m_MenuLayout.gInput.height = weightY(0.2f);
 
+            m_MenuLayout.xposInputAnimBeginX = m_MenuAnimBeginX - m_Menu->width / 2.0f + weightY(0.2f);
+            m_MenuLayout.xposInput.x = m_MenuLayout.xposInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.xposInput.y = weightY(-0.7f);
+            m_MenuLayout.xposInput.width = weightY(0.2f);
+            m_MenuLayout.xposInput.height = weightY(0.2f);
+
+            m_MenuLayout.yposInputAnimBeginX = m_MenuAnimBeginX + m_Menu->width / 2.0f - weightY(0.2f);
+            m_MenuLayout.yposInput.x = m_MenuLayout.yposInputAnimBeginX - m_MenuAnimCompletion * m_Menu->width;
+            m_MenuLayout.yposInput.y = weightY(-0.7f);
+            m_MenuLayout.yposInput.width = weightY(0.2f);
+            m_MenuLayout.yposInput.height = weightY(0.2f);
+
             if (!m_ViewportInitializationRequested) {
                 m_Renderer.viewport(m_ViewportWidth, m_ViewportHeight);
             } else {
                 m_ViewportInitializationRequested = false;
             }
-
-            for (int id = 0; id <= 9; ++id)
+            
+            for (uint8_t id = 0; id <= 11; ++id)
                 refresh.insert(id);
 
             for (const auto& entry : m_Objects)
@@ -517,8 +543,10 @@ namespace mrko900::gravity::app {
             m_MenuLayout.yvelInput.x = m_MenuLayout.yvelInputAnimBeginX - dx;
             m_MenuLayout.radiusInput.x = m_MenuLayout.radiusInputAnimBeginX - dx;
             m_MenuLayout.gInput.x = m_MenuLayout.gInputAnimBeginX - dx;
+            m_MenuLayout.xposInput.x = m_MenuLayout.xposInputAnimBeginX - dx;
+            m_MenuLayout.yposInput.x = m_MenuLayout.yposInputAnimBeginX - dx;
             
-            for (int id = 0; id <= 9; ++id)
+            for (int id = 0; id <= 11; ++id)
                 refresh.insert(id);
 
             if (normalizedTimeDiff >= 2.0f)

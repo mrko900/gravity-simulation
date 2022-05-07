@@ -93,6 +93,14 @@ namespace mrko900::gravity::app {
             mrko900::gravity::graphics::AppearanceImpl* gInputAppearance;
             float gInputAnimBeginX;
             bool gInputState;
+            mrko900::gravity::graphics::Rectangle xposInput;
+            mrko900::gravity::graphics::AppearanceImpl* xposInputAppearance;
+            float xposInputAnimBeginX;
+            bool xposInputState;
+            mrko900::gravity::graphics::Rectangle yposInput;
+            mrko900::gravity::graphics::AppearanceImpl* yposInputAppearance;
+            float yposInputAnimBeginX;
+            bool yposInputState;
         };
 
         MenuLayout m_MenuLayout;
