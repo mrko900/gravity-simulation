@@ -42,6 +42,8 @@ namespace mrko900::gravity::physics {
                 entry.second->netGravitationalForce->setCoordinate(i, 0.0f);
         }
 
+        std::vector<std::pair<std::pair<unsigned int, unsigned int>, float>> distances;
+
         for (auto iIt = m_Entities.begin(); iIt != iEnd; ++iIt) {
             for (auto jIt = iIt; jIt != m_Entities.end(); ++jIt) {
                 unsigned int iId = iIt->first, jId = jIt->first;
@@ -60,6 +62,8 @@ namespace mrko900::gravity::physics {
                 float forceMagn = m_Coef * iMass * jMass / sqdist;
 
                 float dist = sqrt(sqdist);
+                
+                distances.push_back({ { iId, jId }, dist });
 
                 float k = forceMagn / dist;
 
@@ -75,10 +79,12 @@ namespace mrko900::gravity::physics {
                         netGravForce.setCoordinate(d, netGravForce.getCoordinate(d) + signedDist * k);
                     }
                 }
-
-                if (m_DistanceConsumer != nullptr)
-                    (*m_DistanceConsumer)({ iId, jId }, dist);
             }
+        }
+
+        if (m_DistanceConsumer != nullptr) {
+            for (auto& pair : distances)
+                (*m_DistanceConsumer)({ pair.first.first, pair.first.second }, pair.second);
         }
     }
 }

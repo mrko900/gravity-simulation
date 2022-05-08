@@ -654,6 +654,7 @@ namespace mrko900::gravity::app {
                     object.physics.oldCoordinates.setCoordinate(0, newWorldX);
                     object.physics.oldCoordinates.setCoordinate(1, newWorldY);
                     object.refresh = true;
+                    object.canMove = true;
                 }
 
                 m_LastPhysUpdate += microseconds((int) (1.0e6f / targetPhysUpdRate));
@@ -707,6 +708,21 @@ namespace mrko900::gravity::app {
         m_Renderer.render();
     }
 
+    static float vectorAngle(float x, float y) {
+        float pi = 2 * asin(1);
+        if (y == 0)
+            return x > 0 ? 0 : pi;
+        float baseAngle = atan(abs(x / y));
+        if (x > 0 && y > 0)
+            return baseAngle;
+        else if (x < 0 && y > 0)
+            return pi - baseAngle;
+        else if (x < 0 && y < 0)
+            return pi + baseAngle;
+        else
+            return 2 * pi - baseAngle;
+    }
+
     void ProgramLoop::collisionTest(unsigned int obj1, unsigned obj2, float distance) {
         Object& object1 = m_Objects.at(obj1);
         Object& object2 = m_Objects.at(obj2);
@@ -722,11 +738,12 @@ namespace mrko900::gravity::app {
             // 1
             float fx = netForce1.getCoordinate(0);
             float fy = netForce1.getCoordinate(1);
-            float fTheta = atan(fy / fx);
+            float fTheta = vectorAngle(fx, fy); // todo test when fy = 0
             float dx = physics2.coordinates.getCoordinate(0) - physics1.coordinates.getCoordinate(0);
             float dy = physics2.coordinates.getCoordinate(1) - physics1.coordinates.getCoordinate(1);
-            float dTheta = atan(dy / dx);
+            float dTheta = vectorAngle(dx, dy);
             float theta = abs(fTheta - dTheta);
+            std::cout << obj1 << ": " << theta << '\n';
             float pi = 2 * asin(1);
             if (theta < pi) {
                 if (object1.canMove) 
@@ -736,10 +753,10 @@ namespace mrko900::gravity::app {
             // 2
             fx = netForce2.getCoordinate(0);
             fy = netForce2.getCoordinate(1);
-            fTheta = atan(fy / fx);
+            fTheta = vectorAngle(fx, fy); // todo test when fy = 0
             dx = physics1.coordinates.getCoordinate(0) - physics2.coordinates.getCoordinate(0);
             dy = physics1.coordinates.getCoordinate(1) - physics2.coordinates.getCoordinate(1);
-            dTheta = atan(dy / dx);
+            dTheta = vectorAngle(dx, dy);
             theta = abs(fTheta - dTheta);
             pi = 2 * asin(1);
             if (theta < pi) {
@@ -747,8 +764,6 @@ namespace mrko900::gravity::app {
                     object2.canMove = false;
             } else if (!object2.canMove)
                 object2.canMove = true;
-            object1.canMove = false;
-            object2.canMove = false;
         }
     }
 
