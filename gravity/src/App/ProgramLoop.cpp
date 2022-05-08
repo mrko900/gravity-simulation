@@ -268,7 +268,7 @@ namespace mrko900::gravity::app {
                     PhysicalObject& physics = object.physics;
                     physics.coordinates.setCoordinate(0, m_Input);
 
-                    // todo refresh
+                    object.refresh = true;
 
                     resetInput();
                 }
@@ -288,7 +288,7 @@ namespace mrko900::gravity::app {
                     PhysicalObject& physics = object.physics;
                     physics.coordinates.setCoordinate(1, m_Input);
 
-                    // todo refresh
+                    object.refresh = true;
 
                     resetInput();
                 }
@@ -644,6 +644,22 @@ namespace mrko900::gravity::app {
             }
         } else {
             m_LastPhysUpdate = currentFrame;
+
+            for (auto& entry : m_Objects) {
+                Object& object = entry.second;
+                if (!object.refresh)
+                    continue;
+                float newWorldX = object.physics.coordinates.getCoordinate(0);
+                float newWorldY = object.physics.coordinates.getCoordinate(1);
+                float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
+                float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
+                float worldDX = newWorldX - oldWorldX;
+                float worldDY = newWorldY - oldWorldY;
+                object.normalizedX += normalizedDX(worldDX);
+                object.normalizedY += normalizedDY(worldDY, object.aspectRatio);
+                object.physics.oldCoordinates.setCoordinate(0, newWorldX);
+                object.physics.oldCoordinates.setCoordinate(1, newWorldY);
+            }
         }
         // end physics
 
