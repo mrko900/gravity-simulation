@@ -167,6 +167,8 @@ namespace mrko900::gravity::app {
         bool m_PrevSelectedObjectValid;
         bool m_NewObjectSelected;
 
+        void updateSelectedObjectOutline();
+
         bool m_InputActive;
 
         float m_Input;

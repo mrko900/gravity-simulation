@@ -210,6 +210,8 @@ namespace mrko900::gravity::app {
                     physics.massPoint.mass = (float) m_Input;
                     object.refresh = true;
 
+                    updateSelectedObjectOutline();
+
                     resetInput();
                 }
             })
@@ -665,9 +667,7 @@ namespace mrko900::gravity::app {
 
         // object selection
         if (m_NewObjectSelected) {
-            if (m_SelectedObjectValid)
-                m_Objects.at(m_SelectedObject).appearance.getOutline().width = 
-                    objectOutline(m_ViewportWidth, m_WorldScale);
+            updateSelectedObjectOutline();
             if (m_PrevSelectedObjectValid)
                 m_Objects.at(m_PrevSelectedObject).appearance.getOutline().width = 0;
 
@@ -718,10 +718,7 @@ namespace mrko900::gravity::app {
 
         m_PerspectiveY *= m_AspectRatio / oldAR;
 
-        if (m_SelectedObjectValid) {
-            Object& object = m_Objects.at(m_SelectedObject);
-            object.appearance.getOutline().width = objectOutline(newWidth, m_WorldScale);
-        }
+        updateSelectedObjectOutline();
     }
 
     void ProgramLoop::userInput(UserInput input, void* data) {
@@ -751,10 +748,7 @@ namespace mrko900::gravity::app {
         } else if (input == MOUSE_WHEEL) {
             float mouseWheelEvent = *((float*) data);
             m_WorldScale *= 1.0f + 0.1f * mouseWheelEvent;
-            if (m_SelectedObjectValid) {
-                Object& object = m_Objects.at(m_SelectedObject);
-                object.appearance.getOutline().width = objectOutline(m_ViewportWidth, m_WorldScale);
-            }
+            updateSelectedObjectOutline();
         } else if (input == MOUSE_MOVE) {
             if (m_ChangingPerspective) {
                 const MouseMoveInputData& mouseMove = *((MouseMoveInputData*) data);
@@ -855,6 +849,14 @@ namespace mrko900::gravity::app {
             && weightedX < rectangle.x + halfWidth
             && weightedY > rectangle.y - halfHeight
             && weightedY < rectangle.y + halfHeight;
+    }
+
+    void ProgramLoop::updateSelectedObjectOutline() {
+        if (m_SelectedObjectValid) {
+            Object& o = m_Objects.at(m_SelectedObject);
+            o.appearance.getOutline().width
+                = objectOutline(m_ViewportWidth, 5 * o.circle.radius);
+        }
     }
 }
 
