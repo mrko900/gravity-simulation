@@ -5,7 +5,12 @@
 
 #include <iostream> // todo remove
 namespace mrko900::gravity::physics {
-    GravitationalEnvironment::GravitationalEnvironment(float k) : m_Coef(k) {
+    GravitationalEnvironment::GravitationalEnvironment(float k) : GravitationalEnvironment(k, nullptr) {
+    }
+
+    GravitationalEnvironment::GravitationalEnvironment(float k,
+        const std::function<void(std::pair<unsigned int, unsigned int> ids, float distance)>* distanceConsumer) :
+        m_Coef(k), m_DistanceConsumer(distanceConsumer) {
     }
 
     void GravitationalEnvironment::addEntity(unsigned int id, GravityField& entity) {
@@ -39,7 +44,9 @@ namespace mrko900::gravity::physics {
 
         for (auto iIt = m_Entities.begin(); iIt != iEnd; ++iIt) {
             for (auto jIt = iIt; jIt != m_Entities.end(); ++jIt) {
-                if (jIt->first == iIt->first)
+                unsigned int iId = iIt->first, jId = jIt->first;
+
+                if (iId == jId)
                     continue;
 
                 DynamicCoordinates& iCoords = *iIt->second->massPoint->coordinates;
@@ -52,7 +59,9 @@ namespace mrko900::gravity::physics {
                 float jMass = jIt->second->massPoint->mass;
                 float forceMagn = m_Coef * iMass * jMass / sqdist;
 
-                float k = forceMagn / sqrt(sqdist);
+                float dist = sqrt(sqdist);
+
+                float k = forceMagn / dist;
 
                 for (unsigned int d = 0; d < iCoords.dimensions(); ++d) {
                     for (char c = 0; c < 2; ++c) {
@@ -66,6 +75,9 @@ namespace mrko900::gravity::physics {
                         netGravForce.setCoordinate(d, netGravForce.getCoordinate(d) + signedDist * k);
                     }
                 }
+
+                if (m_DistanceConsumer != nullptr)
+                    (*m_DistanceConsumer)({ iId, jId }, dist);
             }
         }
     }

@@ -52,10 +52,13 @@ namespace mrko900::gravity::app {
         m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
         m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
-        m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
+        m_GravitationalEnvironment(1e-3f, &m_CollisionDetector), m_LastPhysUpdate(high_resolution_clock::now()),
         m_PerformSimulation(true), m_SelectedObject(0), m_PrevSelectedObject(0), m_SelectedObjectValid(false),
         m_PrevSelectedObjectValid(false), m_NewObjectSelected(false), m_InputActive(false), m_Input(0.0f),
-        m_InputFractional(false), m_InputDiv(1.0f), m_Menu(nullptr) { // todo m_LastPhysUpdate
+        m_InputFractional(false), m_InputDiv(1.0f), m_Menu(nullptr),
+        m_CollisionDetector([this](std::pair<unsigned int, unsigned int> ids, float distance) {
+            collisionTest(ids.first, ids.second, distance);
+        }) { // todo m_LastPhysUpdate
     }
 
     ProgramLoop::~ProgramLoop() {
@@ -326,7 +329,7 @@ namespace mrko900::gravity::app {
                         DynamicCoordinatesImpl(),
                         DynamicPoint {},
                         GravityField { nullptr, true, nullptr }
-                    }
+                    }, true
                 } });
 
                 unsigned int myId = idd; // id of the new object
@@ -625,6 +628,17 @@ namespace mrko900::gravity::app {
             microseconds physicsUpdDiff = duration_cast<microseconds>(currentFrame - m_LastPhysUpdate);
             if (physicsUpdDiff.count() > (int) (1.0e6f / targetPhysUpdRate)) {
                 m_GravitationalEnvironment.calculate();
+
+                for (auto& entry : m_Objects) {
+                    Object& object = entry.second;
+                    if (!object.canMove) {
+                        object.physics.forces[0].setCoordinate(0, 0.0f);
+                        object.physics.forces[0].setCoordinate(1, 0.0f);
+                        object.physics.velocity.setCoordinate(0, 0.0f);
+                        object.physics.velocity.setCoordinate(1, 0.0f);
+                    }
+                }
+
                 m_ForceSimulation.simulate(1.0f / targetPhysUpdRate);
 
                 for (auto& entry : m_Objects) {
@@ -693,12 +707,61 @@ namespace mrko900::gravity::app {
         m_Renderer.render();
     }
 
+    void ProgramLoop::collisionTest(unsigned int obj1, unsigned obj2, float distance) {
+        Object& object1 = m_Objects.at(obj1);
+        Object& object2 = m_Objects.at(obj2);
+        PhysicalObject& physics1 = object1.physics;
+        PhysicalObject& physics2 = object2.physics;
+        DynamicCoordinates& netForce1 = physics1.forces[0];
+        DynamicCoordinates& netForce2 = physics2.forces[0];
+
+        float worldRadius1 = worldDX(object1.circle.radius);
+        float worldRadius2 = worldDX(object2.circle.radius);
+
+        if (distance < worldRadius1 + worldRadius2) {
+            // 1
+            float fx = netForce1.getCoordinate(0);
+            float fy = netForce1.getCoordinate(1);
+            float fTheta = atan(fy / fx);
+            float dx = physics2.coordinates.getCoordinate(0) - physics1.coordinates.getCoordinate(0);
+            float dy = physics2.coordinates.getCoordinate(1) - physics1.coordinates.getCoordinate(1);
+            float dTheta = atan(dy / dx);
+            float theta = abs(fTheta - dTheta);
+            float pi = 2 * asin(1);
+            if (theta < pi) {
+                if (object1.canMove) 
+                    object1.canMove = false;
+            } else if (!object1.canMove)
+                object1.canMove = true;
+            // 2
+            fx = netForce2.getCoordinate(0);
+            fy = netForce2.getCoordinate(1);
+            fTheta = atan(fy / fx);
+            dx = physics1.coordinates.getCoordinate(0) - physics2.coordinates.getCoordinate(0);
+            dy = physics1.coordinates.getCoordinate(1) - physics2.coordinates.getCoordinate(1);
+            dTheta = atan(dy / dx);
+            theta = abs(fTheta - dTheta);
+            pi = 2 * asin(1);
+            if (theta < pi) {
+                if (object2.canMove)
+                    object2.canMove = false;
+            } else if (!object2.canMove)
+                object2.canMove = true;
+            object1.canMove = false;
+            object2.canMove = false;
+        }
+    }
+
     float ProgramLoop::worldX(float normalizedX) {
         return (normalizedX + m_PerspectiveX) / m_WorldScale;
     }
 
     float ProgramLoop::worldY(float normalizedY, float ownAspectRatio) {
         return (normalizedY + m_PerspectiveY) / ownAspectRatio / m_WorldScale;
+    }
+
+    float ProgramLoop::worldDX(float normalizedY) {
+        return normalizedY / m_WorldScale;
     }
 
     float ProgramLoop::normalizedDX(float worldDX) {

@@ -129,6 +129,7 @@ namespace mrko900::gravity::app {
             bool refresh;
             float aspectRatio;
             PhysicalObject physics;
+            bool canMove;
         };
 
         std::unordered_map<unsigned int, Object> m_Objects;
@@ -140,6 +141,7 @@ namespace mrko900::gravity::app {
 
         float worldX(float normalizedX);
         float worldY(float normalizedY, float ownAspectRatio);
+        float worldDX(float normalizedY);
         float normalizedDX(float worldDX);
         float normalizedDY(float worldDY, float ownAspectRatio);
 
@@ -157,6 +159,10 @@ namespace mrko900::gravity::app {
 
         physics::UniformForceSimulation m_ForceSimulation;
         physics::GravitationalEnvironment m_GravitationalEnvironment;
+
+        std::function<void(std::pair<unsigned int, unsigned int> ids, float distance)> m_CollisionDetector;
+
+        void collisionTest(unsigned int obj1, unsigned int obj2, float distance);
 
         std::chrono::time_point<std::chrono::high_resolution_clock> m_LastPhysUpdate;
 

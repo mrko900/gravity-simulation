@@ -1,7 +1,7 @@
 #include "DynamicCoordinatesImpl.h"
 
 #include <stdexcept>
-
+#include <iostream>
 namespace mrko900::gravity::physics {
     float DynamicCoordinatesImpl::getCoordinate(unsigned int n) const {
         return m_Coordinates[n];

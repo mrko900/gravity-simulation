@@ -13,11 +13,14 @@ namespace mrko900::gravity::physics {
     class GravitationalEnvironment {
     public:
         GravitationalEnvironment(float k);
+        GravitationalEnvironment(float k,
+            const std::function<void(std::pair<unsigned int, unsigned int> ids, float distance)>* distanceConsumer);
         void addEntity(unsigned int id, GravityField& entity);
         void removeEntity(unsigned int id);
         void calculate();
 
     private:
+        const std::function<void(std::pair<unsigned int, unsigned int> ids, float distance)>* m_DistanceConsumer;
         std::map<unsigned int, GravityField*> m_Entities;
         float m_Coef;
     };
