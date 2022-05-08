@@ -13,6 +13,7 @@
 #include "../Physics/DynamicCoordinatesImpl.h"
 #include "../Physics/GravitationalEnvironment.h"
 #include <chrono>
+#include <set>
 
 namespace mrko900::gravity::app {
     class ProgramLoop {
@@ -162,7 +163,11 @@ namespace mrko900::gravity::app {
 
         std::function<void(std::pair<unsigned int, unsigned int> ids, float distance)> m_CollisionDetector;
 
+        std::set<std::pair<unsigned int, unsigned int>> m_Collisions;
+
         void collisionTest(unsigned int obj1, unsigned int obj2, float distance);
+        void handleCollision(bool collision, unsigned int obj1, unsigned int obj2, 
+                             float distance, float gravitationalForce);
 
         std::chrono::time_point<std::chrono::high_resolution_clock> m_LastPhysUpdate;
 

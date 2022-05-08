@@ -350,7 +350,9 @@ namespace mrko900::gravity::app {
                         object.physics.gravityField.massPoint = &object.physics.massPoint;
                         object.physics.gravityField.netGravitationalForce = &object.physics.forces.at(0);
                         object.physics.forceModel.removeVector(0);
-                        object.physics.forceModel.addVector(0, object.physics.forces.back());
+                        object.physics.forceModel.removeVector(1);
+                        object.physics.forceModel.addVector(0, object.physics.forces[0]);
+                        object.physics.forceModel.addVector(1, object.physics.forces[1]);
                     }
                 }
 
@@ -373,14 +375,19 @@ namespace mrko900::gravity::app {
                 dynamicPoint.forceModel = &me.physics.forceModel;
                 dynamicPoint.velocity = &me.physics.velocity;
 
-                me.physics.forces.push_back(DynamicCoordinatesImpl()); // net gravitational force
-
                 // initialize gravitational force
+                me.physics.forces.push_back(DynamicCoordinatesImpl()); // net gravitational force
+                me.physics.forces.back().setCoordinate(0, 0.0f);
+                me.physics.forces.back().setCoordinate(1, 0.0f);
+
+                // initialize normal force
+                me.physics.forces.push_back(DynamicCoordinatesImpl()); // normal force
                 me.physics.forces.back().setCoordinate(0, 0.0f);
                 me.physics.forces.back().setCoordinate(1, 0.0f);
 
                 // add gravitational force to the force model associated with the new object
-                me.physics.forceModel.addVector(0, me.physics.forces.back());
+                me.physics.forceModel.addVector(0, me.physics.forces[0]);
+                me.physics.forceModel.addVector(1, me.physics.forces[1]);
 
                 // set up physical coordinates for the new object
                 DynamicCoordinatesImpl& coordinates = me.physics.coordinates;
@@ -723,7 +730,7 @@ namespace mrko900::gravity::app {
             return 2 * pi - baseAngle;
     }
 
-    void ProgramLoop::collisionTest(unsigned int obj1, unsigned obj2, float distance) {
+    void ProgramLoop::collisionTest(unsigned int obj1, unsigned int obj2, float distance) {
         Object& object1 = m_Objects.at(obj1);
         Object& object2 = m_Objects.at(obj2);
         PhysicalObject& physics1 = object1.physics;
@@ -735,35 +742,28 @@ namespace mrko900::gravity::app {
         float worldRadius2 = worldDX(object2.circle.radius);
 
         if (distance < worldRadius1 + worldRadius2) {
-            // 1
-            float fx = netForce1.getCoordinate(0);
-            float fy = netForce1.getCoordinate(1);
-            float fTheta = vectorAngle(fx, fy); // todo test when fy = 0
-            float dx = physics2.coordinates.getCoordinate(0) - physics1.coordinates.getCoordinate(0);
-            float dy = physics2.coordinates.getCoordinate(1) - physics1.coordinates.getCoordinate(1);
-            float dTheta = vectorAngle(dx, dy);
-            float theta = abs(fTheta - dTheta);
-            std::cout << obj1 << ": " << theta << '\n';
-            float pi = 2 * asin(1);
-            if (theta < pi) {
-                if (object1.canMove) 
-                    object1.canMove = false;
-            } else if (!object1.canMove)
-                object1.canMove = true;
-            // 2
-            fx = netForce2.getCoordinate(0);
-            fy = netForce2.getCoordinate(1);
-            fTheta = vectorAngle(fx, fy); // todo test when fy = 0
-            dx = physics1.coordinates.getCoordinate(0) - physics2.coordinates.getCoordinate(0);
-            dy = physics1.coordinates.getCoordinate(1) - physics2.coordinates.getCoordinate(1);
-            dTheta = vectorAngle(dx, dy);
-            theta = abs(fTheta - dTheta);
-            pi = 2 * asin(1);
-            if (theta < pi) {
-                if (object2.canMove)
-                    object2.canMove = false;
-            } else if (!object2.canMove)
-                object2.canMove = true;
+            if (!m_Collisions.contains({ obj1, obj2 })) {
+                m_Collisions.insert({ obj1, obj2 });
+                handleCollision(true, obj1, obj2, distance, -3.14f);
+            }
+        } else if (m_Collisions.contains({ obj1, obj2 })) {
+            m_Collisions.erase({ obj1, obj2 });
+            handleCollision(false, obj1, obj2, distance, 3.14f);
+        }
+    }
+
+    void ProgramLoop::handleCollision(bool collision, unsigned int obj1, unsigned int obj2,
+                                      float distance, float gravitationalForce) {
+        if (collision) {
+            std::cout << "collision\n";
+
+            Object& object1 = m_Objects.at(obj1);
+            Object& object2 = m_Objects.at(obj2);
+            PhysicalObject& physics1 = object1.physics;
+            PhysicalObject& physics2 = object2.physics;
+
+        } else {
+            std::cout << "no collision\n";
         }
     }
 
