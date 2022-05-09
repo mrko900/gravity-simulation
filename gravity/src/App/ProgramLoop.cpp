@@ -743,15 +743,37 @@ namespace mrko900::gravity::app {
         }
     }
 
-    static std::pair<float, float> velocityAfterCollision(DynamicCoordinates& velocity1, DynamicCoordinates& velocity2,
-                                                          float m1, float m2) {
-        float x = velocity1.getCoordinate(0) * (m1 - m2);
-        float y = velocity1.getCoordinate(1) * (m1 - m2);
-        x += 2 * m2 * velocity2.getCoordinate(0);
-        y += 2 * m2 * velocity2.getCoordinate(1);
-        x /= m1 + m2;
-        y /= m1 + m2;
-        return { x, y };
+    static void normalize(std::pair<float, float>& vec) {
+        float len = sqrt(vec.first * vec.first + vec.second * vec.second);
+        vec.first /= len;
+        vec.second /= len;
+    }
+
+    static float dotProduct(float x1, float y1, float x2, float y2) {
+        return x1 * x2 + y1 * y2;
+    }
+
+    static void setVelocityAfterCollision(DynamicCoordinates& pos1, DynamicCoordinates& pos2,
+                                          DynamicCoordinates& vel1, DynamicCoordinates& vel2,
+                                          float m1, float m2) {
+        std::pair<float, float> normal = { pos2.getCoordinate(0) - pos1.getCoordinate(0),
+                                           pos2.getCoordinate(1) - pos1.getCoordinate(1) };
+        normalize(normal);
+        std::pair<float, float> tangent = { -normal.second, normal.first };
+        float v1n = dotProduct(vel1.getCoordinate(0), vel1.getCoordinate(1), normal.first, normal.second);
+        float v1t = dotProduct(vel1.getCoordinate(0), vel1.getCoordinate(1), tangent.first, tangent.second);
+        float v2n = dotProduct(vel2.getCoordinate(0), vel2.getCoordinate(1), normal.first, normal.second);
+        float v2t = dotProduct(vel2.getCoordinate(0), vel2.getCoordinate(1), tangent.first, tangent.second);
+        float newv1n = (v1n * (m1 - m2) + 2 * m2 * v2n) / (m1 + m2);
+        float newv2n = (v2n * (m2 - m1) + 2 * m1 * v1n) / (m1 + m2);
+        std::pair<float, float> vecv1n = { normal.first * newv1n, normal.second * newv1n };
+        std::pair<float, float> vecv1t = { tangent.first * v1t, tangent.second * v1t };
+        std::pair<float, float> vecv2n = { normal.first * newv2n, normal.second * newv2n };
+        std::pair<float, float> vecv2t = { tangent.first * v2t, tangent.second * v2t };
+        vel1.setCoordinate(0, vecv1n.first + vecv1t.first);
+        vel1.setCoordinate(1, vecv1n.second + vecv1t.second);
+        vel2.setCoordinate(0, vecv2n.first + vecv2t.first);
+        vel2.setCoordinate(1, vecv2n.second + vecv2t.second);
     }
 
     void ProgramLoop::handleCollision(bool collision, unsigned int obj1, unsigned int obj2,
@@ -763,14 +785,9 @@ namespace mrko900::gravity::app {
             PhysicalObject& physics2 = object2.physics;
             DynamicCoordinates& velocity1 = physics1.velocity;
             DynamicCoordinates& velocity2 = physics2.velocity;
-            std::pair<float, float> newvel1 = velocityAfterCollision(velocity1, velocity2, 
-                physics1.massPoint.mass, physics2.massPoint.mass);
-            std::pair<float, float> newvel2 = velocityAfterCollision(velocity2, velocity1,
-                physics2.massPoint.mass, physics1.massPoint.mass);
-            velocity1.setCoordinate(0, newvel1.first);
-            velocity1.setCoordinate(1, newvel1.second);
-            velocity2.setCoordinate(0, newvel2.first);
-            velocity2.setCoordinate(1, newvel2.second);
+            setVelocityAfterCollision(physics1.coordinates,    physics2.coordinates, 
+                                      physics1.velocity,       physics2.velocity,
+                                      physics1.massPoint.mass, physics2.massPoint.mass);
         }
     }
 
