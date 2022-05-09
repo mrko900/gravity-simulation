@@ -56,8 +56,9 @@ namespace mrko900::gravity::app {
         m_PerformSimulation(true), m_SelectedObject(0), m_PrevSelectedObject(0), m_SelectedObjectValid(false),
         m_PrevSelectedObjectValid(false), m_NewObjectSelected(false), m_InputActive(false), m_Input(0.0f),
         m_InputFractional(false), m_InputDiv(1.0f), m_Menu(nullptr),
-        m_CollisionDetector([this](std::pair<unsigned int, unsigned int> ids, float distance) {
-            collisionTest(ids.first, ids.second, distance);
+        m_CollisionDetector([this](std::pair<unsigned int, unsigned int> ids, 
+                                   float distance, float gravitationalForce) {
+            collisionTest(ids.first, ids.second, distance, gravitationalForce);
         }) { // todo m_LastPhysUpdate
     }
 
@@ -329,7 +330,7 @@ namespace mrko900::gravity::app {
                         DynamicCoordinatesImpl(),
                         DynamicPoint {},
                         GravityField { nullptr, true, nullptr }
-                    }, true
+                    }
                 } });
 
                 unsigned int myId = idd; // id of the new object
@@ -636,16 +637,6 @@ namespace mrko900::gravity::app {
             if (physicsUpdDiff.count() > (int) (1.0e6f / targetPhysUpdRate)) {
                 m_GravitationalEnvironment.calculate();
 
-                for (auto& entry : m_Objects) {
-                    Object& object = entry.second;
-                    if (!object.canMove) {
-                        object.physics.forces[0].setCoordinate(0, 0.0f);
-                        object.physics.forces[0].setCoordinate(1, 0.0f);
-                        object.physics.velocity.setCoordinate(0, 0.0f);
-                        object.physics.velocity.setCoordinate(1, 0.0f);
-                    }
-                }
-
                 m_ForceSimulation.simulate(1.0f / targetPhysUpdRate);
 
                 for (auto& entry : m_Objects) {
@@ -654,6 +645,7 @@ namespace mrko900::gravity::app {
                     float newWorldY = object.physics.coordinates.getCoordinate(1);
                     float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
                     float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
+
                     float worldDX = newWorldX - oldWorldX;
                     float worldDY = newWorldY - oldWorldY;
                     object.normalizedX += normalizedDX(worldDX);
@@ -661,7 +653,6 @@ namespace mrko900::gravity::app {
                     object.physics.oldCoordinates.setCoordinate(0, newWorldX);
                     object.physics.oldCoordinates.setCoordinate(1, newWorldY);
                     object.refresh = true;
-                    object.canMove = true;
                 }
 
                 m_LastPhysUpdate += microseconds((int) (1.0e6f / targetPhysUpdRate));
@@ -730,7 +721,7 @@ namespace mrko900::gravity::app {
             return 2 * pi - baseAngle;
     }
 
-    void ProgramLoop::collisionTest(unsigned int obj1, unsigned int obj2, float distance) {
+    void ProgramLoop::collisionTest(unsigned int obj1, unsigned int obj2, float distance, float gravitationalForce) {
         Object& object1 = m_Objects.at(obj1);
         Object& object2 = m_Objects.at(obj2);
         PhysicalObject& physics1 = object1.physics;
@@ -744,26 +735,25 @@ namespace mrko900::gravity::app {
         if (distance < worldRadius1 + worldRadius2) {
             if (!m_Collisions.contains({ obj1, obj2 })) {
                 m_Collisions.insert({ obj1, obj2 });
-                handleCollision(true, obj1, obj2, distance, -3.14f);
+                handleCollision(true, obj1, obj2, distance, gravitationalForce);
             }
         } else if (m_Collisions.contains({ obj1, obj2 })) {
             m_Collisions.erase({ obj1, obj2 });
-            handleCollision(false, obj1, obj2, distance, 3.14f);
+            handleCollision(false, obj1, obj2, distance, gravitationalForce);
         }
     }
 
     void ProgramLoop::handleCollision(bool collision, unsigned int obj1, unsigned int obj2,
                                       float distance, float gravitationalForce) {
         if (collision) {
-            std::cout << "collision\n";
-
             Object& object1 = m_Objects.at(obj1);
-            Object& object2 = m_Objects.at(obj2);
             PhysicalObject& physics1 = object1.physics;
+            physics1.velocity.setCoordinate(0, -physics1.velocity.getCoordinate(0));
+            physics1.velocity.setCoordinate(1, -physics1.velocity.getCoordinate(1));
+            Object& object2 = m_Objects.at(obj2);
             PhysicalObject& physics2 = object2.physics;
-
-        } else {
-            std::cout << "no collision\n";
+            physics2.velocity.setCoordinate(0, -physics2.velocity.getCoordinate(0));
+            physics2.velocity.setCoordinate(1, -physics2.velocity.getCoordinate(1));
         }
     }
 

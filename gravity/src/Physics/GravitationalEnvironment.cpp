@@ -9,7 +9,8 @@ namespace mrko900::gravity::physics {
     }
 
     GravitationalEnvironment::GravitationalEnvironment(float k,
-        const std::function<void(std::pair<unsigned int, unsigned int> ids, float distance)>* distanceConsumer) :
+        const std::function<void(std::pair<unsigned int, unsigned int> ids, 
+                                 float distance, float gravitationalForce)>* distanceConsumer) :
         m_Coef(k), m_DistanceConsumer(distanceConsumer) {
     }
 
@@ -42,7 +43,12 @@ namespace mrko900::gravity::physics {
                 entry.second->netGravitationalForce->setCoordinate(i, 0.0f);
         }
 
-        std::vector<std::pair<std::pair<unsigned int, unsigned int>, float>> distances;
+        struct CallbackData {
+            unsigned int obj1, obj2;
+            float distance, gravitationalForce;
+        };
+
+        std::vector<CallbackData> distances;
 
         for (auto iIt = m_Entities.begin(); iIt != iEnd; ++iIt) {
             for (auto jIt = iIt; jIt != m_Entities.end(); ++jIt) {
@@ -63,7 +69,7 @@ namespace mrko900::gravity::physics {
 
                 float dist = sqrt(sqdist);
                 
-                distances.push_back({ { iId, jId }, dist });
+                distances.push_back(CallbackData { iId, jId, dist, forceMagn });
 
                 float k = forceMagn / dist;
 
@@ -83,8 +89,9 @@ namespace mrko900::gravity::physics {
         }
 
         if (m_DistanceConsumer != nullptr) {
-            for (auto& pair : distances)
-                (*m_DistanceConsumer)({ pair.first.first, pair.first.second }, pair.second);
+            for (const CallbackData& callbackData : distances)
+                (*m_DistanceConsumer)({ callbackData.obj1, callbackData.obj2 }, 
+                    callbackData.distance, callbackData.gravitationalForce);
         }
     }
 }
