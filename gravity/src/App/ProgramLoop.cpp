@@ -743,17 +743,34 @@ namespace mrko900::gravity::app {
         }
     }
 
+    static std::pair<float, float> velocityAfterCollision(DynamicCoordinates& velocity1, DynamicCoordinates& velocity2,
+                                                          float m1, float m2) {
+        float x = velocity1.getCoordinate(0) * (m1 - m2);
+        float y = velocity1.getCoordinate(1) * (m1 - m2);
+        x += 2 * m2 * velocity2.getCoordinate(0);
+        y += 2 * m2 * velocity2.getCoordinate(1);
+        x /= m1 + m2;
+        y /= m1 + m2;
+        return { x, y };
+    }
+
     void ProgramLoop::handleCollision(bool collision, unsigned int obj1, unsigned int obj2,
                                       float distance, float gravitationalForce) {
         if (collision) {
             Object& object1 = m_Objects.at(obj1);
-            PhysicalObject& physics1 = object1.physics;
-            physics1.velocity.setCoordinate(0, -physics1.velocity.getCoordinate(0));
-            physics1.velocity.setCoordinate(1, -physics1.velocity.getCoordinate(1));
             Object& object2 = m_Objects.at(obj2);
+            PhysicalObject& physics1 = object1.physics;
             PhysicalObject& physics2 = object2.physics;
-            physics2.velocity.setCoordinate(0, -physics2.velocity.getCoordinate(0));
-            physics2.velocity.setCoordinate(1, -physics2.velocity.getCoordinate(1));
+            DynamicCoordinates& velocity1 = physics1.velocity;
+            DynamicCoordinates& velocity2 = physics2.velocity;
+            std::pair<float, float> newvel1 = velocityAfterCollision(velocity1, velocity2, 
+                physics1.massPoint.mass, physics2.massPoint.mass);
+            std::pair<float, float> newvel2 = velocityAfterCollision(velocity2, velocity1,
+                physics2.massPoint.mass, physics1.massPoint.mass);
+            velocity1.setCoordinate(0, newvel1.first);
+            velocity1.setCoordinate(1, newvel1.second);
+            velocity2.setCoordinate(0, newvel2.first);
+            velocity2.setCoordinate(1, newvel2.second);
         }
     }
 
