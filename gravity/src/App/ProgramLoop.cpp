@@ -445,6 +445,19 @@ namespace mrko900::gravity::app {
             }
         });
 
+        AppearanceAttribute attribs2[] { FILL_COLOR, OUTLINE };
+        m_WorldBorder.push_back(WorldBorder { 
+            Rectangle { 0.0f, 0.0f, 0.1f, 0.1f, nullptr, -1 }, AppearanceImpl(attribs2, 2)
+        });
+        m_WorldBorder[0].rect.appearance = &m_WorldBorder[0].appearance;
+        m_WorldBorder[0].appearance.getFillColor().b = 1.0f;
+        m_WorldBorder[0].appearance.getFillColor().a = 1.0f;
+        m_WorldBorder[0].appearance.getOutline().color.r = 1.0f;
+        m_WorldBorder[0].appearance.getOutline().color.a = 1.0f;
+        m_WorldBorder[0].appearance.getOutline().width = 12.0f;
+        m_WorldBorder[0].appearance.getOutline().mode = OutlineMode::INNER;
+        //m_Renderer.addRectangle(12, m_WorldBorder[0].rect);
+
         m_ViewportUpdateRequested = m_ViewportInitializationRequested = true;
     }
 
@@ -540,7 +553,6 @@ namespace mrko900::gravity::app {
             
             for (uint8_t id = 0; id <= 11; ++id)
                 refresh.insert(id);
-
             for (const auto& entry : m_Objects)
                 refresh.insert(entry.first);
 
@@ -593,6 +605,7 @@ namespace mrko900::gravity::app {
                 object.circle.x = weightX(object.normalizedX);
                 refresh.insert(entry.first);
             }
+            m_WorldBorder[0].rect.x -= weightX(m_PerspectiveChangeX);
             m_PerspectiveXUpdateRequested = false;
         }
         if (m_PerspectiveYUpdateRequested) {
@@ -602,6 +615,7 @@ namespace mrko900::gravity::app {
                 object.circle.y = weightY(object.normalizedY) * m_AspectRatio / object.aspectRatio;
                 refresh.insert(entry.first);
             }
+            m_WorldBorder[0].rect.y -= weightY(m_PerspectiveChangeY);
             m_PerspectiveYUpdateRequested = false;
         }
 
@@ -617,6 +631,11 @@ namespace mrko900::gravity::app {
                 object.circle.radius *= k;
                 refresh.insert(entry.first);
             }
+            m_WorldBorder[0].rect.x *= k;
+            m_WorldBorder[0].rect.y *= k;
+            m_WorldBorder[0].rect.width *= k;
+            m_WorldBorder[0].rect.height *= k;
+            m_WorldBorder[0].refresh = true;
             m_OldWorldScale = m_WorldScale;
         }
 

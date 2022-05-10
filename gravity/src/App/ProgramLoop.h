@@ -131,8 +131,15 @@ namespace mrko900::gravity::app {
             float aspectRatio;
             PhysicalObject physics;
         };
-
+       
         std::unordered_map<unsigned int, Object> m_Objects;
+
+        struct WorldBorder {
+            mrko900::gravity::graphics::Rectangle rect;
+            mrko900::gravity::graphics::AppearanceImpl appearance;
+            bool refresh;
+        };
+        std::vector<WorldBorder> m_WorldBorder;
 
         bool testCircleClick(unsigned short clickX, unsigned short clickY,
                              const mrko900::gravity::graphics::Circle& circle);

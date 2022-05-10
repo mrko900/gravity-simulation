@@ -127,11 +127,23 @@ namespace mrko900::gravity::graphics::gl {
                 glUseProgramStages(m_ProgramPipeline, GL_VERTEX_SHADER_BIT, m_RectVertexShaderProgram);
                 glUseProgramStages(m_ProgramPipeline, GL_FRAGMENT_SHADER_BIT, m_SimpleFragmentShaderProgram);
 #define rect figure.def.rectangleDef
-#define rectFillColor rect.origin->appearance->getFillColor()
-                if (rect.origin->appearance->hasAttribute(FILL_COLOR)) {
+#define rectAppearance (*rect.origin->appearance)
+#define rectFillColor rectAppearance.getFillColor()
+#define rectOutline rectAppearance.getOutline()
+                if (rectAppearance.hasAttribute(FILL_COLOR)) {
                     glProgramUniform1ui(m_SimpleFragmentShaderProgram, 3, 1);
                     glProgramUniform4f(m_SimpleFragmentShaderProgram, 4, rectFillColor.r, 
                                        rectFillColor.g, rectFillColor.b, rectFillColor.a);
+                    if (rectAppearance.hasAttribute(OUTLINE)) {
+                        glProgramUniform1f(m_SimpleFragmentShaderProgram, 0, rect.origin->width);
+                        glProgramUniform1f(m_SimpleFragmentShaderProgram, 1, rect.origin->height);
+                        glProgramUniform1f(m_SimpleFragmentShaderProgram, 5,
+                            rectOutline.mode == OutlineMode::INNER ? 1 : 2);
+                        glProgramUniform1f(m_SimpleFragmentShaderProgram, 6,
+                            (float) rectOutline.width / (float) m_ViewportWidth);
+                        glProgramUniform4f(m_SimpleFragmentShaderProgram, 7,
+                            rectOutline.color.r, rectOutline.color.g, rectOutline.color.b, rectOutline.color.a);
+                    }
                 } else if (rect.origin->appearance->hasAttribute(TEXTURE)) {
                     glProgramUniform1ui(m_SimpleFragmentShaderProgram, 3, 2);
                     glBindTextureUnit(0, rect.texture);
@@ -139,7 +151,9 @@ namespace mrko900::gravity::graphics::gl {
                 glBindVertexBuffer(0, rect.buffer, 0, 2 * sizeof(GLfloat));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #undef circle
+#undef rectAppearance
 #undef rectFillColor
+#undef rectOutline
             }
             ++iterator;
         }
