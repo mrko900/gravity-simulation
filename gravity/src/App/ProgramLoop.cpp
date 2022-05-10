@@ -52,7 +52,7 @@ namespace mrko900::gravity::app {
         m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
         m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
-        m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
+        m_GravitationalEnvironment(1.0e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
         m_PerformSimulation(true), m_SelectedObject(0), m_PrevSelectedObject(0), m_SelectedObjectValid(false),
         m_PrevSelectedObjectValid(false), m_NewObjectSelected(false), m_InputActive(false), m_Input(0.0f),
         m_InputFractional(false), m_InputDiv(1.0f), m_Menu(nullptr),
@@ -629,34 +629,43 @@ namespace mrko900::gravity::app {
             if (physicsUpdDiff.count() > (int) (1.0e6f / targetPhysUpdRate)) {
                 m_LastPhysUpdate += microseconds((int) (1.0e6f / targetPhysUpdRate));
 
-                m_GravitationalEnvironment.calculate();
-                m_ForceSimulation.simulateDisplacement(1.0f / targetPhysUpdRate);
-                if (m_Objects.size() != 0) {
-                    auto iEnd = m_Objects.end();
-                    --iEnd;
-                    for (auto iIt = m_Objects.begin(); iIt != iEnd; ++iIt) {
-                        for (auto jIt = iIt; jIt != m_Objects.end(); ++jIt) {
-                            unsigned int iId = iIt->first, jId = jIt->first;
-                            if (iId == jId)
-                                continue;
-                            auto& iEntry = *iIt;
-                            auto& jEntry = *jIt;
-                            DynamicCoordinates& iCoords = iEntry.second.physics.coordinates;
-                            DynamicCoordinates& jCoords = jEntry.second.physics.coordinates;
-                            float dist = sqrt(
-                                pow(iCoords.getCoordinate(0) - jCoords.getCoordinate(0), 2)
-                                + pow(iCoords.getCoordinate(1) - jCoords.getCoordinate(1), 2)
-                            );
-                            collisionTest(iId, jId, dist);
+                for (;;) {
+                    bool end = true;
+                    m_GravitationalEnvironment.calculate();
+                    //m_ForceSimulation.simulateDisplacement(1.0f / targetPhysUpdRate / 60);
+                    m_ForceSimulation.simulateDisplacement(1.0f / targetPhysUpdRate);
+                    if (m_Objects.size() != 0) {
+                        auto iEnd = m_Objects.end();
+                        --iEnd;
+                        for (auto iIt = m_Objects.begin(); iIt != iEnd; ++iIt) {
+                            for (auto jIt = iIt; jIt != m_Objects.end(); ++jIt) {
+                                unsigned int iId = iIt->first, jId = jIt->first;
+                                if (iId == jId)
+                                    continue;
+                                auto& iEntry = *iIt;
+                                auto& jEntry = *jIt;
+                                DynamicCoordinates& iCoords = iEntry.second.physics.coordinates;
+                                DynamicCoordinates& jCoords = jEntry.second.physics.coordinates;
+                                float dist = sqrt(
+                                    pow(iCoords.getCoordinate(0) - jCoords.getCoordinate(0), 2)
+                                    + pow(iCoords.getCoordinate(1) - jCoords.getCoordinate(1), 2)
+                                );
+                                if (collisionTest(iId, jId, dist) && end)
+                                    end = false;
+                            }
                         }
                     }
+                    for (auto& entry : m_Objects) {
+                        DynamicCoordinates& coordinates = entry.second.physics.coordinates;
+                        DynamicCoordinates& oldCoordinates = entry.second.physics.oldCoordinates;
+                        coordinates.setCoordinate(0, oldCoordinates.getCoordinate(0));
+                        coordinates.setCoordinate(1, oldCoordinates.getCoordinate(1));
+                    }
+                    if (end)
+                        break;
                 }
-                for (auto& entry : m_Objects) {
-                    DynamicCoordinates& coordinates = entry.second.physics.coordinates;
-                    DynamicCoordinates& oldCoordinates = entry.second.physics.oldCoordinates;
-                    coordinates.setCoordinate(0, oldCoordinates.getCoordinate(0));
-                    coordinates.setCoordinate(1, oldCoordinates.getCoordinate(1));
-                }
+
+                //m_ForceSimulation.simulate(1.0f / targetPhysUpdRate / 60);
                 m_ForceSimulation.simulate(1.0f / targetPhysUpdRate);
 
                 for (auto& entry : m_Objects) {
@@ -742,6 +751,7 @@ namespace mrko900::gravity::app {
         m_GravCallbackData.push_back({ obj1, obj2, distance, gravitationalForce });
     }
 
+    // todo optimize
     bool ProgramLoop::collisionTest(unsigned int obj1, unsigned int obj2, float distance) {
         Object& object1 = m_Objects.at(obj1);
         Object& object2 = m_Objects.at(obj2);
