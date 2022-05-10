@@ -33,6 +33,15 @@ namespace mrko900::gravity::physics {
         return sqrt(s);
     }
 
+    void GravitationalEnvironment::addException(unsigned int first, unsigned int second) {
+        m_Exceptions.insert({ first, second });
+    }
+
+    void GravitationalEnvironment::removeException(unsigned int first, unsigned int second) {
+        m_Exceptions.erase({ first, second });
+        m_Exceptions.erase({ second, first });
+    }
+
     void GravitationalEnvironment::calculate() {
         if (m_Entities.size() == 0)
             return;
@@ -55,6 +64,9 @@ namespace mrko900::gravity::physics {
                 unsigned int iId = iIt->first, jId = jIt->first;
 
                 if (iId == jId)
+                    continue;
+
+                if (m_Exceptions.contains({ iId, jId }) || m_Exceptions.contains({ jId, iId }))
                     continue;
 
                 DynamicCoordinates& iCoords = *iIt->second->massPoint->coordinates;

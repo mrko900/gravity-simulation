@@ -169,6 +169,7 @@ namespace mrko900::gravity::app {
         std::vector<GravCallback> m_GravCallbackData;
         void gravCallback(unsigned int obj1, unsigned int obj2, float distance, float gravitationalForce);
 
+        // todo unordered_set
         std::set<std::pair<unsigned int, unsigned int>> m_Collisions;
 
         bool collisionTest(unsigned int obj1, unsigned int obj2, float distance);

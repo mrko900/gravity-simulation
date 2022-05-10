@@ -754,13 +754,16 @@ namespace mrko900::gravity::app {
         float worldRadius2 = worldDX(object2.circle.radius);
 
         if (distance <= worldRadius1 + worldRadius2) {
-            if (!m_Collisions.contains({ obj1, obj2 })) {
+            if (!m_Collisions.contains({ obj1, obj2 }) && !m_Collisions.contains({ obj2, obj1 })) {
                 m_Collisions.insert({ obj1, obj2 });
                 handleCollision(true, obj1, obj2, distance);
                 return true;
             }
         } else if (m_Collisions.contains({ obj1, obj2 })) {
             m_Collisions.erase({ obj1, obj2 });
+            handleCollision(false, obj1, obj2, distance);
+        } else if (m_Collisions.contains({ obj2, obj1 })) {
+            m_Collisions.erase({ obj2, obj1 });
             handleCollision(false, obj1, obj2, distance);
         }
 
@@ -803,6 +806,7 @@ namespace mrko900::gravity::app {
     void ProgramLoop::handleCollision(bool collision, unsigned int obj1, unsigned int obj2,
                                       float distance) {
         if (collision) {
+            m_GravitationalEnvironment.addException(obj1, obj2);
             Object& object1 = m_Objects.at(obj1);
             Object& object2 = m_Objects.at(obj2);
             PhysicalObject& physics1 = object1.physics;
@@ -812,6 +816,8 @@ namespace mrko900::gravity::app {
             setVelocityAfterCollision(physics1.coordinates,    physics2.coordinates, 
                                       physics1.velocity,       physics2.velocity,
                                       physics1.massPoint.mass, physics2.massPoint.mass);
+        } else {
+            m_GravitationalEnvironment.removeException(obj1, obj2);
         }
     }
 
