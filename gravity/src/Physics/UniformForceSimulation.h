@@ -9,6 +9,7 @@ namespace mrko900::gravity::physics {
         void addEntity(unsigned int id, DynamicPoint& entity) override;
         void replaceEntity(unsigned int id, DynamicPoint& entity) override;
         void removeEntity(unsigned int id) override;
+        void simulateDisplacement(float timeElapsed);
         void simulate(float timeElapsed) override;
 
     private:

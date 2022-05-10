@@ -52,13 +52,13 @@ namespace mrko900::gravity::app {
         m_AspectRatio((float) m_ViewportWidth / (float) m_ViewportHeight), m_ChangingPerspective(false),
         m_PerspectiveChangeX(0.0f), m_PerspectiveChangeY(0.0f), m_PerspectiveXUpdateRequested(false),
         m_PerspectiveYUpdateRequested(false), m_PerspectiveX(0.0f), m_PerspectiveY(0.0f),
-        m_GravitationalEnvironment(1e-3f, &m_CollisionDetector), m_LastPhysUpdate(high_resolution_clock::now()),
+        m_GravitationalEnvironment(1e-3f), m_LastPhysUpdate(high_resolution_clock::now()),
         m_PerformSimulation(true), m_SelectedObject(0), m_PrevSelectedObject(0), m_SelectedObjectValid(false),
         m_PrevSelectedObjectValid(false), m_NewObjectSelected(false), m_InputActive(false), m_Input(0.0f),
         m_InputFractional(false), m_InputDiv(1.0f), m_Menu(nullptr),
-        m_CollisionDetector([this](std::pair<unsigned int, unsigned int> ids, 
+            m_GravCallback([this](std::pair<unsigned int, unsigned int> ids,
                                    float distance, float gravitationalForce) {
-            collisionTest(ids.first, ids.second, distance, gravitationalForce);
+            gravCallback(ids.first, ids.second, distance, gravitationalForce);
         }) { // todo m_LastPhysUpdate
     }
 
@@ -199,7 +199,7 @@ namespace mrko900::gravity::app {
         m_MenuLayout.massInputAppearance = initButton(5, m_MenuLayout.massInput, &m_MenuLayout.massInputState,
             std::function<void(bool)>([this](bool mode) {
                 m_InputActive = mode;
-                if (!mode) {
+                if (!mode && m_SelectedObjectValid) {
                     interpretInput();
 
                     printf("> Set mass for obj %d: %f\n", m_SelectedObject, m_Input);
@@ -224,7 +224,7 @@ namespace mrko900::gravity::app {
         m_MenuLayout.xvelInputAppearance = initButton(6, m_MenuLayout.xvelInput, &m_MenuLayout.xvelInputState,
             std::function<void(bool)>([this](bool mode) {
                 m_InputActive = mode;
-                if (!mode) {
+                if (!mode && m_SelectedObjectValid) {
                     interpretInput();
 
                     printf("> Set horizontal velocity for obj %d: %f\n", m_SelectedObject, m_Input);
@@ -241,7 +241,7 @@ namespace mrko900::gravity::app {
         m_MenuLayout.yvelInputAppearance = initButton(7, m_MenuLayout.yvelInput, &m_MenuLayout.yvelInputState,
             std::function<void(bool)>([this](bool mode) {
                 m_InputActive = mode;
-                if (!mode) {
+                if (!mode && m_SelectedObjectValid) {
                     interpretInput();
 
                     printf("> Set vertical velocity for obj %d: %f\n", m_SelectedObject, m_Input);
@@ -265,7 +265,7 @@ namespace mrko900::gravity::app {
         m_MenuLayout.xposInputAppearance = initButton(10, m_MenuLayout.xposInput, &m_MenuLayout.xposInputState,
             std::function<void(bool)>([this](bool mode) {
                 m_InputActive = mode;
-                if (!mode) {
+                if (!mode && m_SelectedObjectValid) {
                     interpretInput();
 
                     printf("> Set pos x for obj %d: %f\n", m_SelectedObject, m_Input);
@@ -285,7 +285,7 @@ namespace mrko900::gravity::app {
         m_MenuLayout.yposInputAppearance = initButton(11, m_MenuLayout.yposInput, &m_MenuLayout.yposInputState,
             std::function<void(bool)>([this](bool mode) {
                 m_InputActive = mode;
-                if (!mode) {
+                if (!mode && m_SelectedObjectValid) {
                     interpretInput();
 
                     printf("> Set pos y for obj %d: %f\n", m_SelectedObject, m_Input);
@@ -351,9 +351,7 @@ namespace mrko900::gravity::app {
                         object.physics.gravityField.massPoint = &object.physics.massPoint;
                         object.physics.gravityField.netGravitationalForce = &object.physics.forces.at(0);
                         object.physics.forceModel.removeVector(0);
-                        object.physics.forceModel.removeVector(1);
                         object.physics.forceModel.addVector(0, object.physics.forces[0]);
-                        object.physics.forceModel.addVector(1, object.physics.forces[1]);
                     }
                 }
 
@@ -381,14 +379,8 @@ namespace mrko900::gravity::app {
                 me.physics.forces.back().setCoordinate(0, 0.0f);
                 me.physics.forces.back().setCoordinate(1, 0.0f);
 
-                // initialize normal force
-                me.physics.forces.push_back(DynamicCoordinatesImpl()); // normal force
-                me.physics.forces.back().setCoordinate(0, 0.0f);
-                me.physics.forces.back().setCoordinate(1, 0.0f);
-
                 // add gravitational force to the force model associated with the new object
                 me.physics.forceModel.addVector(0, me.physics.forces[0]);
-                me.physics.forceModel.addVector(1, me.physics.forces[1]);
 
                 // set up physical coordinates for the new object
                 DynamicCoordinatesImpl& coordinates = me.physics.coordinates;
@@ -635,8 +627,36 @@ namespace mrko900::gravity::app {
         if (m_PerformSimulation) {
             microseconds physicsUpdDiff = duration_cast<microseconds>(currentFrame - m_LastPhysUpdate);
             if (physicsUpdDiff.count() > (int) (1.0e6f / targetPhysUpdRate)) {
-                m_GravitationalEnvironment.calculate();
+                m_LastPhysUpdate += microseconds((int) (1.0e6f / targetPhysUpdRate));
 
+                m_GravitationalEnvironment.calculate();
+                m_ForceSimulation.simulateDisplacement(1.0f / targetPhysUpdRate);
+                if (m_Objects.size() != 0) {
+                    auto iEnd = m_Objects.end();
+                    --iEnd;
+                    for (auto iIt = m_Objects.begin(); iIt != iEnd; ++iIt) {
+                        for (auto jIt = iIt; jIt != m_Objects.end(); ++jIt) {
+                            unsigned int iId = iIt->first, jId = jIt->first;
+                            if (iId == jId)
+                                continue;
+                            auto& iEntry = *iIt;
+                            auto& jEntry = *jIt;
+                            DynamicCoordinates& iCoords = iEntry.second.physics.coordinates;
+                            DynamicCoordinates& jCoords = jEntry.second.physics.coordinates;
+                            float dist = sqrt(
+                                pow(iCoords.getCoordinate(0) - jCoords.getCoordinate(0), 2)
+                                + pow(iCoords.getCoordinate(1) - jCoords.getCoordinate(1), 2)
+                            );
+                            collisionTest(iId, jId, dist);
+                        }
+                    }
+                }
+                for (auto& entry : m_Objects) {
+                    DynamicCoordinates& coordinates = entry.second.physics.coordinates;
+                    DynamicCoordinates& oldCoordinates = entry.second.physics.oldCoordinates;
+                    coordinates.setCoordinate(0, oldCoordinates.getCoordinate(0));
+                    coordinates.setCoordinate(1, oldCoordinates.getCoordinate(1));
+                }
                 m_ForceSimulation.simulate(1.0f / targetPhysUpdRate);
 
                 for (auto& entry : m_Objects) {
@@ -645,7 +665,6 @@ namespace mrko900::gravity::app {
                     float newWorldY = object.physics.coordinates.getCoordinate(1);
                     float oldWorldX = object.physics.oldCoordinates.getCoordinate(0);
                     float oldWorldY = object.physics.oldCoordinates.getCoordinate(1);
-
                     float worldDX = newWorldX - oldWorldX;
                     float worldDY = newWorldY - oldWorldY;
                     object.normalizedX += normalizedDX(worldDX);
@@ -654,8 +673,6 @@ namespace mrko900::gravity::app {
                     object.physics.oldCoordinates.setCoordinate(1, newWorldY);
                     object.refresh = true;
                 }
-
-                m_LastPhysUpdate += microseconds((int) (1.0e6f / targetPhysUpdRate));
             }
         } else {
             m_LastPhysUpdate = currentFrame;
@@ -721,7 +738,11 @@ namespace mrko900::gravity::app {
             return 2 * pi - baseAngle;
     }
 
-    void ProgramLoop::collisionTest(unsigned int obj1, unsigned int obj2, float distance, float gravitationalForce) {
+    void ProgramLoop::gravCallback(unsigned int obj1, unsigned int obj2, float distance, float gravitationalForce) {
+        m_GravCallbackData.push_back({ obj1, obj2, distance, gravitationalForce });
+    }
+
+    bool ProgramLoop::collisionTest(unsigned int obj1, unsigned int obj2, float distance) {
         Object& object1 = m_Objects.at(obj1);
         Object& object2 = m_Objects.at(obj2);
         PhysicalObject& physics1 = object1.physics;
@@ -732,15 +753,18 @@ namespace mrko900::gravity::app {
         float worldRadius1 = worldDX(object1.circle.radius);
         float worldRadius2 = worldDX(object2.circle.radius);
 
-        if (distance < worldRadius1 + worldRadius2) {
+        if (distance <= worldRadius1 + worldRadius2) {
             if (!m_Collisions.contains({ obj1, obj2 })) {
                 m_Collisions.insert({ obj1, obj2 });
-                handleCollision(true, obj1, obj2, distance, gravitationalForce);
+                handleCollision(true, obj1, obj2, distance);
+                return true;
             }
         } else if (m_Collisions.contains({ obj1, obj2 })) {
             m_Collisions.erase({ obj1, obj2 });
-            handleCollision(false, obj1, obj2, distance, gravitationalForce);
+            handleCollision(false, obj1, obj2, distance);
         }
+
+        return false;
     }
 
     static void normalize(std::pair<float, float>& vec) {
@@ -777,7 +801,7 @@ namespace mrko900::gravity::app {
     }
 
     void ProgramLoop::handleCollision(bool collision, unsigned int obj1, unsigned int obj2,
-                                      float distance, float gravitationalForce) {
+                                      float distance) {
         if (collision) {
             Object& object1 = m_Objects.at(obj1);
             Object& object2 = m_Objects.at(obj2);

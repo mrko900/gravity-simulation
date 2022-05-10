@@ -269,7 +269,7 @@ namespace mrko900::gravity::app::win {
             std::chrono::steady_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
             if (currentTime - secondStart > std::chrono::seconds(1)) {
                 secondStart = currentTime;
-                std::cout << "fps: " << frames << '\n';
+                //std::cout << "fps: " << frames << '\n';
                 frames = 0;
             }
 

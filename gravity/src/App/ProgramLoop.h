@@ -161,13 +161,19 @@ namespace mrko900::gravity::app {
         physics::GravitationalEnvironment m_GravitationalEnvironment;
 
         std::function<void(std::pair<unsigned int, unsigned int> ids, 
-                           float distance, float gravitationalForce)> m_CollisionDetector;
+                           float distance, float gravitationalForce)> m_GravCallback;
+        struct GravCallback {
+            unsigned int obj1, obj2;
+            float distance, gravitationalForce;
+        };
+        std::vector<GravCallback> m_GravCallbackData;
+        void gravCallback(unsigned int obj1, unsigned int obj2, float distance, float gravitationalForce);
 
         std::set<std::pair<unsigned int, unsigned int>> m_Collisions;
 
-        void collisionTest(unsigned int obj1, unsigned int obj2, float distance, float gravitationalForce);
+        bool collisionTest(unsigned int obj1, unsigned int obj2, float distance);
         void handleCollision(bool collision, unsigned int obj1, unsigned int obj2, 
-                             float distance, float gravitationalForce);
+                             float distance);
 
         std::chrono::time_point<std::chrono::high_resolution_clock> m_LastPhysUpdate;
 
