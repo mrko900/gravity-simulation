@@ -392,10 +392,8 @@ namespace mrko900::gravity::app {
 
                 // set up velocity for the new object
                 DynamicCoordinatesImpl& velocity = me.physics.velocity;
-                velocity.setCoordinate(0, -coordinates.getCoordinate(0) / 2.0f);
-                velocity.setCoordinate(1, -coordinates.getCoordinate(1) / 2.0f);
-            /*    velocity.setCoordinate(0, 0.0f);
-                velocity.setCoordinate(1, 0.0f);*/
+                velocity.setCoordinate(0, 0.0f);
+                velocity.setCoordinate(1, 0.0f);
 
                 // set up gravity field pointers
                 me.physics.gravityField.massPoint = &me.physics.massPoint;
@@ -631,42 +629,27 @@ namespace mrko900::gravity::app {
             if (physicsUpdDiff.count() > (int) (1.0e6f / targetPhysUpdRate)) {
                 m_LastPhysUpdate += microseconds((int) (1.0e6f / targetPhysUpdRate));
 
-                for (;;) {
-                    m_ForceSimulation.simulateDisplacement(1.0f / targetPhysUpdRate);
-                    bool end = true;
-                    if (m_Objects.size() != 0) {
-                        auto iEnd = m_Objects.end();
-                        --iEnd;
-                        for (auto iIt = m_Objects.begin(); iIt != iEnd; ++iIt) {
-                            for (auto jIt = iIt; jIt != m_Objects.end(); ++jIt) {
-                                unsigned int iId = iIt->first, jId = jIt->first;
-                                if (iId == jId)
-                                    continue;
-                                auto& iEntry = *iIt;
-                                auto& jEntry = *jIt;
-                                DynamicCoordinates& iCoords = iEntry.second.physics.coordinates;
-                                DynamicCoordinates& jCoords = jEntry.second.physics.coordinates;
-                                float dist = sqrt(
-                                    pow(iCoords.getCoordinate(0) - jCoords.getCoordinate(0), 2)
-                                    + pow(iCoords.getCoordinate(1) - jCoords.getCoordinate(1), 2)
-                                );
-                                if (collisionTest(iId, jId, dist) && end) {
-
-                                    end = false;
-                                }
-                            }
+                m_GravitationalEnvironment.calculate();
+                if (m_Objects.size() != 0) {
+                    auto iEnd = m_Objects.end();
+                    --iEnd;
+                    for (auto iIt = m_Objects.begin(); iIt != iEnd; ++iIt) {
+                        for (auto jIt = iIt; jIt != m_Objects.end(); ++jIt) {
+                            unsigned int iId = iIt->first, jId = jIt->first;
+                            if (iId == jId)
+                                continue;
+                            auto& iEntry = *iIt;
+                            auto& jEntry = *jIt;
+                            DynamicCoordinates& iCoords = iEntry.second.physics.coordinates;
+                            DynamicCoordinates& jCoords = jEntry.second.physics.coordinates;
+                            float dist = sqrt(
+                                pow(iCoords.getCoordinate(0) - jCoords.getCoordinate(0), 2)
+                                + pow(iCoords.getCoordinate(1) - jCoords.getCoordinate(1), 2)
+                            );
+                            collisionTest(iId, jId, dist);
                         }
                     }
-                    for (auto& entry : m_Objects) {
-                        DynamicCoordinates& coordinates = entry.second.physics.coordinates;
-                        DynamicCoordinates& oldCoordinates = entry.second.physics.oldCoordinates;
-                        coordinates.setCoordinate(0, oldCoordinates.getCoordinate(0));
-                        coordinates.setCoordinate(1, oldCoordinates.getCoordinate(1));
-                    }
-                    if (end)
-                        break;
                 }
-
                 m_ForceSimulation.simulate(1.0f / targetPhysUpdRate);
 
                 for (auto& entry : m_Objects) {
@@ -765,18 +748,18 @@ namespace mrko900::gravity::app {
         float worldRadius2 = worldDX(object2.circle.radius);
 
         if (distance < worldRadius1 + worldRadius2) {
-            //if (!m_Collisions.contains({ obj1, obj2 }) && !m_Collisions.contains({ obj2, obj1 })) {
-            //    m_Collisions.insert({ obj1, obj2 });
+            if (!m_Collisions.contains({ obj1, obj2 }) && !m_Collisions.contains({ obj2, obj1 })) {
+                m_Collisions.insert({ obj1, obj2 });
                 handleCollision(true, obj1, obj2, distance);
                 return true;
-            //}
-        }/* else if (m_Collisions.contains({ obj1, obj2 })) {
+            }
+        } else if (m_Collisions.contains({ obj1, obj2 })) {
             m_Collisions.erase({ obj1, obj2 });
             handleCollision(false, obj1, obj2, distance);
         } else if (m_Collisions.contains({ obj2, obj1 })) {
             m_Collisions.erase({ obj2, obj1 });
             handleCollision(false, obj1, obj2, distance);
-        }*/
+        }
 
         return false;
     }
@@ -817,7 +800,7 @@ namespace mrko900::gravity::app {
     void ProgramLoop::handleCollision(bool collision, unsigned int obj1, unsigned int obj2,
                                       float distance) {
         if (collision) {
-            //m_GravitationalEnvironment.addException(obj1, obj2);
+            m_GravitationalEnvironment.addException(obj1, obj2);
             Object& object1 = m_Objects.at(obj1);
             Object& object2 = m_Objects.at(obj2);
             PhysicalObject& physics1 = object1.physics;
@@ -828,7 +811,7 @@ namespace mrko900::gravity::app {
                                       physics1.velocity,       physics2.velocity,
                                       physics1.massPoint.mass, physics2.massPoint.mass);
         } else {
-            //m_GravitationalEnvironment.removeException(obj1, obj2);
+            m_GravitationalEnvironment.removeException(obj1, obj2);
         }
     }
 
